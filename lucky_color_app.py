@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import datetime
 
 st.set_page_config(
     page_title="飛行機ラッキーカラー占い",
@@ -83,9 +84,18 @@ colors_data = [
     {"color": "白", "theme_color": "#aaaaaa", "airline": "スカイマークなど", "emoji": "⚪", "knowledge": "雲みたいな真っ白い飛行機！スカイマークの飛行機は、翼の先にハートやスペードのマークがこっそり描かれていることがあるよ。探してみてね！"}
 ]
 
-# お誕生日サプライズのターゲット設定
-target_names = ["ゆうと", "あかり"]
-month_keywords = ["3がつ", "3月", "さんがつ"]
+# 誕生日リスト（ひらがな：MMDD）
+birthday_list = {
+    "いちな": "0601", "みつき": "0602", "りと": "0603", "えいこう": "0604",
+    "すず": "0605", "えま": "0606", "ひなの": "0607", "ふうが": "0608",
+    "ゆう": "0609", "みひろ": "0610", "しょうり": "0611", "りょうま": "0612",
+    "じゅきあ": "0613", "りゅうき": "0614", "はるた": "0615", "しょうま": "0616",
+    "じょうたろう": "0617", "あやと": "0618", "しょうた": "0619", "ひろむ": "0329"
+}
+
+def to_hiragana(text):
+    """カタカナをひらがなに変換する"""
+    return "".join(chr(ord(c) - 0x60) if 0x30A1 <= ord(c) <= 0x30F6 else c for c in text)
 
 def generate_fortune():
     return {
@@ -121,18 +131,38 @@ elif st.session_state.step == "result":
         st.session_state.show_airplane = False
 
     name = st.session_state.user_name
+    hira_name = to_hiragana(name)
     
-    # 1. サプライズ判定
-    is_target = any(t in name for t in target_names)
-    is_month = any(m in name for m in month_keywords)
+    # 日本時間で今日の日付を取得 (MMDD)
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    today_str = datetime.datetime.now(JST).strftime("%m%d")
     
-    # 2. サプライズメッセージ表示（該当すれば）
-    if is_target:
+    # 1. 判定（入力された名前がリストにあり、今日が誕生日か）
+    is_birthday = (hira_name in birthday_list and birthday_list[hira_name] == today_str)
+    
+    # 2. 誕生日判定と演出
+    if is_birthday:
         st.balloons()
-        st.markdown('<div style="background-color:#ffeb3b; padding:15px; border-radius:15px; text-align:center; font-size:clamp(1.2rem, 4vw, 1.5rem); font-weight:bold; color:#ff5722; margin-bottom:15px; box-shadow:0px 4px 10px rgba(0,0,0,0.1); border: 2px solid #ff9800; animation: float 2s ease-in-out infinite;">🎉 お誕生日おめでとう！ 🎉</div>', unsafe_allow_html=True)
-    elif is_month:
-        st.balloons()
-        st.markdown('<div style="background-color:#ffeb3b; padding:15px; border-radius:15px; text-align:center; font-size:clamp(1.2rem, 4vw, 1.5rem); font-weight:bold; color:#ff5722; margin-bottom:15px; box-shadow:0px 4px 10px rgba(0,0,0,0.1); border: 2px solid #ff9800; animation: float 2s ease-in-out infinite;">🎂 3月生まれのみんな、おめでとう！ 🎂</div>', unsafe_allow_html=True)
+        # お祝いの風船やクラッカーが画面いっぱいに舞う演出
+        cracker_html = """
+        <style>
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .cracker { position: fixed; top: -10%; font-size: 3rem; animation: fall linear forwards; z-index: 99999; pointer-events: none; }
+        </style>
+        """
+        for i in range(40):
+            left = random.randint(0, 100)
+            duration = random.uniform(2, 6)
+            delay = random.uniform(0, 2.5)
+            icon = random.choice(["🎉", "🎈", "✨", "🎂", "🎊", "🎁"])
+            cracker_html += f'<div class="cracker" style="left: {left}vw; animation-duration: {duration}s; animation-delay: {delay}s;">{icon}</div>'
+        st.markdown(cracker_html, unsafe_allow_html=True)
+        
+        # 大きなお祝いメッセージ
+        st.markdown('<div style="background-color:#fff9c4; padding:25px; border-radius:20px; text-align:center; font-size:clamp(1.5rem, 6vw, 2.5rem); font-weight:900; color:#e65100; margin-bottom:20px; box-shadow:0px 8px 16px rgba(0,0,0,0.15); border: 4px dashed #ff9800; line-height:1.4; animation: float 2s ease-in-out infinite;">おたんじょうびおめでとう！🎂✨</div>', unsafe_allow_html=True)
         
     greeting_text = f"{name}ちゃん、今日のアナタは…"
     current = st.session_state.current_result
