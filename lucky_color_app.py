@@ -166,7 +166,7 @@ elif st.session_state.step == "result":
         st.markdown(cracker_html, unsafe_allow_html=True)
         
         # 大きなお祝いメッセージ
-        st.markdown('<div style="background-color:#fff9c4; padding:25px; border-radius:20px; text-align:center; font-size:clamp(1.5rem, 6vw, 2.5rem); font-weight:900; color:#e65100; margin-bottom:20px; box-shadow:0px 8px 16px rgba(0,0,0,0.15); border: 4px dashed #ff9800; line-height:1.4; animation: float 2s ease-in-out infinite;">おたんじょうび\nおめでとう！🎂✨</div>', unsafe_allow_html=True)
+        st.markdown('<div style="background-color:#fff9c4; padding:25px; border-radius:20px; text-align:center; font-size:clamp(1.5rem, 6vw, 2.5rem); font-weight:900; color:#e65100; margin-bottom:20px; box-shadow:0px 8px 16px rgba(0,0,0,0.15); border: 4px dashed #ff9800; line-height:1.4; animation: float 2s ease-in-out infinite;">おたんじょうび<br>おめでとう！🎂✨</div>', unsafe_allow_html=True)
         
     greeting_text = f"{name}さん、今日のアナタは…"
     current = st.session_state.current_result
