@@ -1,6 +1,7 @@
 import streamlit as st
 import random
 import datetime
+import time
 
 st.set_page_config(
     page_title="飛行機ラッキーカラー占い",
@@ -47,18 +48,18 @@ header { visibility: hidden !important; display: none !important; }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
 
 /* 飛行機アニメーション用CSS */
-@keyframes flyRight {
-    0% { transform: translateX(-20vw) translateY(0) rotate(0deg); opacity: 1; }
-    50% { transform: translateX(50vw) translateY(-10vh) rotate(-10deg); opacity: 1; }
-    100% { transform: translateX(120vw) translateY(-20vh) rotate(-20deg); opacity: 1; }
+@keyframes flyUp {
+    0% { transform: translateY(10vh) rotate(-45deg); opacity: 1; }
+    100% { transform: translateY(-120vh) rotate(-45deg); opacity: 1; }
 }
 .airplane-animation {
     position: fixed;
-    top: 40%;
-    left: -100px;
-    font-size: 5rem;
+    bottom: 0px;
+    left: 50%;
+    margin-left: -3rem;
+    font-size: 6rem;
     z-index: 99999;
-    animation: flyRight 2.5s ease-in-out forwards;
+    animation: flyUp 1.5s ease-in forwards;
     pointer-events: none;
     text-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
@@ -127,7 +128,10 @@ elif st.session_state.step == "result":
     # 画面2：結果画面
     # ==========================================
     if st.session_state.get("show_airplane", False):
-        st.markdown('<div class="airplane-animation">✈️</div>', unsafe_allow_html=True)
+        placeholder = st.empty()
+        placeholder.markdown('<div class="airplane-animation">✈️</div>', unsafe_allow_html=True)
+        time.sleep(1.5)
+        placeholder.empty()
         st.session_state.show_airplane = False
 
     name = st.session_state.user_name
@@ -153,7 +157,7 @@ elif st.session_state.step == "result":
         .cracker { position: fixed; top: -10%; font-size: 3rem; animation: fall linear forwards; z-index: 99999; pointer-events: none; }
         </style>
         """
-        for i in range(40):
+        for i in range(20):
             left = random.randint(0, 100)
             duration = random.uniform(2, 6)
             delay = random.uniform(0, 2.5)
