@@ -17,17 +17,24 @@ if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 if "current_result" not in st.session_state:
     st.session_state.current_result = None
+if "show_airplane" not in st.session_state:
+    st.session_state.show_airplane = False
 
 # ---------------------------
 # カスタムCSS（空行なし）
 # ---------------------------
 st.markdown("""<style>
+/* Streamlit UI elements hiding */
+[data-testid="stDecoration"] { display: none !important; }
+[data-testid="stHeader"] { display: none !important; }
+[data-testid="stFooter"] { display: none !important; }
+#MainMenu { visibility: hidden !important; }
+footer { visibility: hidden !important; display: none !important; }
+header { visibility: hidden !important; display: none !important; }
+
 .stApp { background-color: #e0f7fa; }
-.block-container { padding-top: 6rem; padding-bottom: 2rem; max-width: 500px; }
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-header { visibility: hidden; }
-.main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; line-height: 1.4; }
+.block-container { padding-top: 4rem; padding-bottom: 2rem; max-width: 500px; }
+.main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 60px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
 .result-card { background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: clamp(15px, 4vw, 25px); text-align: center; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); margin: 10px 0 20px 0; border: 3px dashed #81d4fa; display: flex; flex-direction: column; gap: 10px; }
 .fortune-text { font-size: clamp(2.5rem, 10vw, 4rem); font-weight: 900; color: #d32f2f; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 2px 2px 4px rgba(0,0,0,0.2); margin: 5px 0; line-height: 1.2; }
 .section-title { font-size: clamp(0.9rem, 3vw, 1.1rem); color: #666; font-weight: bold; margin-top: 5px; margin-bottom: 2px; }
@@ -37,6 +44,24 @@ header { visibility: hidden; }
 .mamechishiki { font-size: clamp(0.95rem, 3.5vw, 1.1rem); color: #333; margin-top: 10px; line-height: 1.6; text-align: left; background-color: #fff9c4; padding: 15px; border-radius: 12px; border-left: 6px solid #ffeb3b; word-wrap: break-word; }
 .clouds { font-size: clamp(1.5rem, 5vw, 2.5rem); text-align: center; margin-bottom: 5px; animation: float 3s ease-in-out infinite; line-height: 1.2; }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
+
+/* 飛行機アニメーション用CSS */
+@keyframes flyRight {
+    0% { transform: translateX(-20vw) translateY(0) rotate(0deg); opacity: 1; }
+    50% { transform: translateX(50vw) translateY(-10vh) rotate(-10deg); opacity: 1; }
+    100% { transform: translateX(120vw) translateY(-20vh) rotate(-20deg); opacity: 1; }
+}
+.airplane-animation {
+    position: fixed;
+    top: 40%;
+    left: -100px;
+    font-size: 5rem;
+    z-index: 99999;
+    animation: flyRight 2.5s ease-in-out forwards;
+    pointer-events: none;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
 div.stButton > button { background-color: #ff9800; color: white; font-weight: bold; border-radius: 50px; padding: 10px 10px; font-size: clamp(1.2rem, 4vw, 1.5rem); border: none; box-shadow: 0px 6px 12px rgba(255, 152, 0, 0.4); transition: all 0.2s; width: 100%; min-height: 60px; margin-top: 10px; }
 div.stButton > button:hover { background-color: #f57c00; transform: scale(1.02); }
 div.stButton > button:active { transform: scale(0.98); background-color: #e65100; box-shadow: 0px 2px 4px rgba(255, 152, 0, 0.4); }
@@ -70,7 +95,7 @@ def generate_fortune():
     }
 
 # 共通ヘッダー
-st.markdown('<div class="clouds">☀️ ✈️ 🌈 ✈️ ✨</div>', unsafe_allow_html=True)
+st.markdown('<div class="clouds">☁️ ✈️ ☁️ ✈️ ☁️</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-title">✨ 浜田子供会 ✨<br>ラッキー占い ✈️</h1>', unsafe_allow_html=True)
 
 
@@ -83,6 +108,7 @@ if st.session_state.step == "input":
     if st.button("✨ 占う！ ✨", use_container_width=True):
         st.session_state.user_name = user_input if user_input.strip() else "おともだち"
         st.session_state.current_result = generate_fortune()
+        st.session_state.show_airplane = True
         st.session_state.step = "result"
         st.rerun()
 
@@ -90,6 +116,10 @@ elif st.session_state.step == "result":
     # ==========================================
     # 画面2：結果画面
     # ==========================================
+    if st.session_state.get("show_airplane", False):
+        st.markdown('<div class="airplane-animation">✈️</div>', unsafe_allow_html=True)
+        st.session_state.show_airplane = False
+
     name = st.session_state.user_name
     
     # 1. サプライズ判定
@@ -134,4 +164,4 @@ elif st.session_state.step == "result":
         st.rerun()
 
 # 共通フッター
-st.markdown('<div class="clouds" style="margin-top:15px;">✈️ ✨ 🌈 ✨ ✈️</div>', unsafe_allow_html=True)
+st.markdown('<div class="clouds" style="margin-top:15px;">☁️ ✨ ☁️ ✨ ☁️</div>', unsafe_allow_html=True)
