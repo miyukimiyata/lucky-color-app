@@ -38,7 +38,8 @@ header { visibility: hidden !important; display: none !important; }
 .block-container { padding-top: 4rem; padding-bottom: 2rem; max-width: 500px; }
 .main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 60px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
 .result-card { background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: clamp(15px, 4vw, 25px); text-align: center; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); margin: 10px 0 20px 0; border: 3px dashed #81d4fa; display: flex; flex-direction: column; gap: 10px; }
-.fortune-text { font-size: clamp(2.5rem, 10vw, 4rem); font-weight: 900; color: #d32f2f; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 2px 2px 4px rgba(0,0,0,0.2); margin: 5px 0; line-height: 1.2; }
+.fortune-text { font-size: clamp(3rem, 12vw, 5.5rem); font-weight: 900; color: #ff3d00; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 4px 4px 10px rgba(0,0,0,0.3); margin: 15px 0; line-height: 1.3; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+@keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 .section-title { font-size: clamp(0.9rem, 3vw, 1.1rem); color: #666; font-weight: bold; margin-top: 5px; margin-bottom: 2px; }
 .color-name { font-size: clamp(2rem, 7vw, 3rem); font-weight: bold; margin: 5px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); line-height: 1.2; }
 .item-name { font-size: clamp(1.2rem, 4.5vw, 1.6rem); font-weight: bold; color: #00897b; background-color: #e0f2f1; border-radius: 12px; padding: 10px 15px; display: inline-block; margin: 0 auto; box-shadow: 0px 2px 4px rgba(0,0,0,0.05); word-break: keep-all; }
@@ -75,7 +76,7 @@ div[data-testid="stTextInput"] input:focus { border-color: #007bb5; box-shadow: 
 # ---------------------------
 # データ定義
 # ---------------------------
-fortunes = ["大吉 🌟", "中吉 ⭐", "小吉 ✨", "吉 🍀"]
+fortunes = ["ひいてびっくり吉 🌟", "ふつうと見せかけて吉 ⭐", "ギリギリセーフ吉 ✨", "謎のミラクル吉 🍀"]
 items = ["🛫 飛行機の模型", "🍦 ソフトクリーム", "🎟️ 展望デッキのチケット", "🛂 パスポート", "🧳 スーツケース"]
 colors_data = [
     {"color": "青", "theme_color": "#005baa", "airline": "ANA", "emoji": "🔵", "knowledge": "関空から飛ぶANAの飛行機は、世界中の空を青く染めているよ！青色は『安全』や『信頼』のシンボルでもあるんだって。"},
@@ -88,19 +89,49 @@ colors_data = [
 # わらちゃう結果リスト
 special_fortunes = [
     {
+        "fortune": "鼻毛が伸びる運 👃",
+        "item": "🧦 先生の穴あき靴下",
+        "result": {"color": "鼻水スカイブルー", "theme_color": "#4fc3f7", "airline": "ヒミツの航空", "emoji": "💧", "knowledge": "飛行機に乗ると気圧の変化でおならが出やすくなるんだって！ホントだよ！"}
+    },
+    {
+        "fortune": "おならが止まらない運 💨",
+        "item": "🩲 予備のパンツ（3枚）",
+        "result": {"color": "ぷうぷうイエロー", "theme_color": "#ffeb3b", "airline": "オナラ航空", "emoji": "💨", "knowledge": "パイロットは、実はおならを我慢しながら運転してるかも！？（ウソだよ！）"}
+    },
+    {
+        "fortune": "顔がパンパン運 🍞",
+        "item": "🍬 誰かの食べかけの飴",
+        "result": {"color": "アンパンレッド", "theme_color": "#e53935", "airline": "パンパンエアー", "emoji": "🔴", "knowledge": "飛行機の中では、ポテトチップスの袋がパンパンに膨らむよ！顔も膨らむかも！？"}
+    },
+    {
+        "fortune": "逆立ち歩き運 🙃",
+        "item": "📖 逆さまの教科書",
+        "result": {"color": "まっさかさまパープル", "theme_color": "#9c27b0", "airline": "さかさま航空", "emoji": "👾", "knowledge": "飛行機は逆さまに飛ぶこともできるんだよ（本物のアクロバット飛行機ね！）。"}
+    },
+    {
+        "fortune": "迷子の子猫運 🐱",
+        "item": "🎀 ネコ耳カチューシャ",
+        "result": {"color": "にゃんにゃんホワイト", "theme_color": "#212121", "airline": "ニャンコエアー", "emoji": "🐾", "knowledge": "飛行機のタイヤは、車よりずっと分厚くて丈夫なんだよ！猫の肉球とは大違い！"}
+    },
+    {
+        "fortune": "宿題が消える運 🪄",
+        "item": "🖍️ 魔法の消しゴム",
+        "result": {"color": "まぼろし透明色", "theme_color": "#b0bec5", "airline": "マジックジェット", "emoji": "👻", "knowledge": "飛行機は雷に打たれても大丈夫なように作られているんだ。魔法みたいでしょ？"}
+    },
+    {
+        "fortune": "宇宙人にさらわれる運 👽",
+        "item": "🛸 アルミホイルの帽子",
+        "result": {"color": "未確認グリーン", "theme_color": "#4caf50", "airline": "UFO", "emoji": "👽", "knowledge": "飛行機に乗ってるときに見える星空は、地上よりずっと綺麗だよ！宇宙人に会えるかも？"}
+    },
+    {
         "fortune": "うひょー！大爆笑 🤣",
         "item": "🕶️ 先生のサングラス",
-        "result": {"color": "鼻水色", "theme_color": "#a8e6cf", "airline": "ヒミツ", "emoji": "💧", "knowledge": "飛行機は、おならをブーンと出すと空に浮くんだよ（ウソだよ、エンジンだよ！）。"}
+        "result": {"color": "ヘンテコ色", "theme_color": "#009688", "airline": "ヒミツ", "emoji": "💧", "knowledge": "飛行機は、おならをブーンと出すと空に浮くんだよ（ウソだよ、エンジンだよ！）。"}
     },
     {
         "fortune": "げらげら運 😆",
-        "item": "🙃 逆さメガネ",
-        "result": {"color": "うんち色（茶色じゃなくて、ゴールド！）", "theme_color": "#d4af37", "airline": "ナイショ", "emoji": "💩", "knowledge": "パイロットは、実は寝ながら運転してるんだよ（ウソだよ、ちゃんと見てるよ！）。"}
-    },
-    {
-        "fortune": "爆笑王！ 👑",
-        "item": "🩲 伸びるパンツ",
-        "result": {"color": "変なピンク", "theme_color": "#ff1493", "airline": "ナゾ", "emoji": "🤪", "knowledge": "飛行機のトイレは、吸い込まれるような音がしてちょっと怖いよね。"}
+        "item": "💩 ニセモノのうんち",
+        "result": {"color": "うんち色ゴールド！", "theme_color": "#d4af37", "airline": "ナイショ", "emoji": "💩", "knowledge": "パイロットは、実は寝ながら運転してるんだよ（ウソだよ、ちゃんと見てるよ！）。"}
     }
 ]
 
@@ -118,8 +149,8 @@ def to_hiragana(text):
     return "".join(chr(ord(c) - 0x60) if 0x30A1 <= ord(c) <= 0x30F6 else c for c in text)
 
 def generate_fortune():
-    # 25%の確率で「わらちゃう」結果を出す
-    if random.random() < 0.25:
+    # 70%の確率で「わらちゃう」結果を出す
+    if random.random() < 0.70:
         return random.choice(special_fortunes)
     else:
         return {
