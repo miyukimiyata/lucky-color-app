@@ -86,6 +86,45 @@ colors_data = [
     {"color": "白", "theme_color": "#aaaaaa", "airline": "スカイマークなど", "emoji": "⚪", "knowledge": "雲みたいな真っ白い飛行機！スカイマークの飛行機は、翼の先にハートやスペードのマークがこっそり描かれていることがあるよ。探してみてね！"}
 ]
 
+# もふもふ動物系リスト
+animal_fortunes = [
+    {
+        "fortune": "キャプテン・パンダ運 🐼",
+        "item": "🐼 パンダの「おひるね枕」",
+        "result": {"color": "ささいろグリーン", "theme_color": "#2e7d32", "airline": "もふもふ航空", "emoji": "🎋", "knowledge": "パンダは笹をたくさん食べて眠るんだ！飛行機でたっぷり寝たら、スッキリ元気になれるよ！"},
+        "type": "animal",
+        "animal_emoji": ["🐼", "🎋", "🍃"]
+    },
+    {
+        "fortune": "そらとぶ ペンギン運 🐧",
+        "item": "🍦 ひえひえ「ソフトクリーム」",
+        "result": {"color": "こおり色ブルー", "theme_color": "#81d4fa", "airline": "スノーウィングス", "emoji": "❄️", "knowledge": "ペンギンは空を飛べないけど海を飛ぶように泳ぐんだ！君も自由に大空を飛べるよ！"},
+        "type": "animal",
+        "animal_emoji": ["🐧", "❄️"]
+    },
+    {
+        "fortune": "ふわふわ ウサギCAさん運 🐰",
+        "item": "🎀 うさ耳「カチューシャ」",
+        "result": {"color": "いちごミルク", "theme_color": "#f8bbd0", "airline": "キャロットエアー", "emoji": "🍓", "knowledge": "CAさんは飛行機の中でいろんなお世話をしてくれる優しい人たち。ウサギみたいにピョンと跳ねて活躍しよう！"},
+        "type": "animal",
+        "animal_emoji": ["🐰", "🥕", "💖"]
+    },
+    {
+        "fortune": "くいしんぼう クマ機長運 🐻",
+        "item": "🍯 とろ〜り「はちみつ」",
+        "result": {"color": "はちみつゴールド", "theme_color": "#ffb300", "airline": "ベアーフライト", "emoji": "🍯", "knowledge": "クマの機長はちょっと食いしん坊かも？おいしいご飯を食べれば、どんなフライトも大成功！"},
+        "type": "animal",
+        "animal_emoji": ["🐻", "🐝", "🍯"]
+    },
+    {
+        "fortune": "おしゃべり インコパイロット運 🐦",
+        "item": "✒️ カラフルな「はねのペン」",
+        "result": {"color": "レインボー", "theme_color": "#ab47bc", "airline": "パロットジェット", "emoji": "🌈", "knowledge": "おしゃべりなインコは、パイロットの通信みたいだね！いろんな人とお話しして楽しい一日になりそう！"},
+        "type": "animal",
+        "animal_emoji": ["🐦", "♪", "🎵"]
+    }
+]
+
 # わらちゃう結果リスト
 special_fortunes = [
     {
@@ -149,15 +188,24 @@ def to_hiragana(text):
     return "".join(chr(ord(c) - 0x60) if 0x30A1 <= ord(c) <= 0x30F6 else c for c in text)
 
 def generate_fortune():
-    # 70%の確率で「わらちゃう」結果を出す
-    if random.random() < 0.70:
-        return random.choice(special_fortunes)
-    else:
+    # 「爆笑系」「女子向けキラキラ系」「もふもふ動物系」が均等に出るように調整
+    r = random.random()
+    if r < 0.33:
+        # 女子向けキラキラ系 (通常)
         return {
             "fortune": random.choice(fortunes),
             "item": random.choice(items),
-            "result": random.choice(colors_data)
+            "result": random.choice(colors_data),
+            "type": "normal"
         }
+    elif r < 0.66:
+        # 爆笑系
+        ret = random.choice(special_fortunes).copy()
+        ret["type"] = "funny"
+        return ret
+    else:
+        # もふもふ動物系
+        return random.choice(animal_fortunes)
 
 # 共通ヘッダー
 st.markdown('<div class="clouds">☁️ ✈️ ☁️ ✈️ ☁️</div>', unsafe_allow_html=True)
@@ -224,6 +272,31 @@ elif st.session_state.step == "result":
         
     greeting_text = f"{name}さん、今日のアナタは…"
     current = st.session_state.current_result
+    
+    # 3. 動物系の場合の演出強化
+    if current.get("type") == "animal":
+        animal_html = """
+        <style>
+        @keyframes hop {
+            0% { transform: translateY(110vh) translateX(0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            30% { transform: translateY(60vh) translateX(5vw) scale(1.1); }
+            50% { transform: translateY(30vh) translateX(-5vw) scale(1.2); }
+            70% { transform: translateY(0vh) translateX(5vw) scale(1.1); }
+            100% { transform: translateY(-30vh) translateX(-2vw) scale(1); opacity: 0; }
+        }
+        .animal-hop { position: fixed; bottom: -10%; font-size: 4rem; animation: hop ease-out forwards; z-index: 99998; pointer-events: none; }
+        </style>
+        """
+        emojis = current.get("animal_emoji", ["🐾", "✨"])
+        for i in range(15):
+            left = random.randint(0, 90)
+            duration = random.uniform(3.0, 5.0)
+            delay = random.uniform(0, 1.5)
+            icon = random.choice(emojis)
+            animal_html += f'<div class="animal-hop" style="left: {left}vw; animation-duration: {duration}s; animation-delay: {delay}s;">{icon}</div>'
+        st.markdown(animal_html, unsafe_allow_html=True)
+
     fortune = current["fortune"]
     item = current["item"]
     result = current["result"]
