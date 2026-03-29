@@ -23,8 +23,8 @@ if "current_result" not in st.session_state:
 # ---------------------------
 st.markdown("""<style>
 .stApp { background-color: #e0f7fa; }
-.block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 500px; }
-.main-title { font-size: clamp(1.4rem, 5vw, 2.2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-bottom: 5px; font-weight: bold; line-height: 1.3; }
+.block-container { padding-top: 4rem; padding-bottom: 2rem; max-width: 500px; }
+.main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 20px; margin-bottom: 10px; font-weight: bold; line-height: 1.4; }
 .result-card { background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: clamp(15px, 4vw, 25px); text-align: center; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); margin: 10px 0 20px 0; border: 3px dashed #81d4fa; display: flex; flex-direction: column; gap: 10px; }
 .fortune-text { font-size: clamp(2.5rem, 10vw, 4rem); font-weight: 900; color: #d32f2f; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 2px 2px 4px rgba(0,0,0,0.2); margin: 5px 0; line-height: 1.2; }
 .section-title { font-size: clamp(0.9rem, 3vw, 1.1rem); color: #666; font-weight: bold; margin-top: 5px; margin-bottom: 2px; }
@@ -68,7 +68,7 @@ def generate_fortune():
 
 # 共通ヘッダー
 st.markdown('<div class="clouds">☁️ ✈️ ☁️ ✈️ ☁️</div>', unsafe_allow_html=True)
-st.markdown('<h1 class="main-title">✨ 浜田子供会ラッキー占い ✈️</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">✨ 浜田子供会 ✨<br>ラッキー占い ✈️</h1>', unsafe_allow_html=True)
 
 
 if st.session_state.step == "input":
