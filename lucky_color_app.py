@@ -85,6 +85,25 @@ colors_data = [
     {"color": "白", "theme_color": "#aaaaaa", "airline": "スカイマークなど", "emoji": "⚪", "knowledge": "雲みたいな真っ白い飛行機！スカイマークの飛行機は、翼の先にハートやスペードのマークがこっそり描かれていることがあるよ。探してみてね！"}
 ]
 
+# わらちゃう結果リスト
+special_fortunes = [
+    {
+        "fortune": "うひょー！大爆笑 🤣",
+        "item": "🕶️ 先生のサングラス",
+        "result": {"color": "鼻水色", "theme_color": "#a8e6cf", "airline": "ヒミツ", "emoji": "💧", "knowledge": "飛行機は、おならをブーンと出すと空に浮くんだよ（ウソだよ、エンジンだよ！）。"}
+    },
+    {
+        "fortune": "げらげら運 😆",
+        "item": "🙃 逆さメガネ",
+        "result": {"color": "うんち色（茶色じゃなくて、ゴールド！）", "theme_color": "#d4af37", "airline": "ナイショ", "emoji": "💩", "knowledge": "パイロットは、実は寝ながら運転してるんだよ（ウソだよ、ちゃんと見てるよ！）。"}
+    },
+    {
+        "fortune": "爆笑王！ 👑",
+        "item": "🩲 伸びるパンツ",
+        "result": {"color": "変なピンク", "theme_color": "#ff1493", "airline": "ナゾ", "emoji": "🤪", "knowledge": "飛行機のトイレは、吸い込まれるような音がしてちょっと怖いよね。"}
+    }
+]
+
 # 誕生日リスト（ひらがな：MMDD）
 birthday_list = {
     "いちな": "0601", "みつき": "0602", "りと": "0603", "えいこう": "0604",
@@ -99,11 +118,15 @@ def to_hiragana(text):
     return "".join(chr(ord(c) - 0x60) if 0x30A1 <= ord(c) <= 0x30F6 else c for c in text)
 
 def generate_fortune():
-    return {
-        "fortune": random.choice(fortunes),
-        "item": random.choice(items),
-        "result": random.choice(colors_data)
-    }
+    # 25%の確率で「わらちゃう」結果を出す
+    if random.random() < 0.25:
+        return random.choice(special_fortunes)
+    else:
+        return {
+            "fortune": random.choice(fortunes),
+            "item": random.choice(items),
+            "result": random.choice(colors_data)
+        }
 
 # 共通ヘッダー
 st.markdown('<div class="clouds">☁️ ✈️ ☁️ ✈️ ☁️</div>', unsafe_allow_html=True)
@@ -157,7 +180,7 @@ elif st.session_state.step == "result":
         .cracker { position: fixed; top: -10%; font-size: 3rem; animation: fall linear forwards; z-index: 99999; pointer-events: none; }
         </style>
         """
-        for i in range(20):
+        for i in range(7):
             left = random.randint(0, 100)
             duration = random.uniform(2, 6)
             delay = random.uniform(0, 2.5)
