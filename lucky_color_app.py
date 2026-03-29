@@ -42,15 +42,6 @@ div[data-testid="stTextInput"] input { font-size: 1.2rem; padding: 12px; border-
 div[data-testid="stTextInput"] input:focus { border-color: #007bb5; box-shadow: 0px 4px 10px rgba(0, 123, 181, 0.2); }
 </style>""", unsafe_allow_html=True)
 
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
-
 # ---------------------------
 # データ定義
 # ---------------------------
@@ -77,7 +68,7 @@ def generate_fortune():
 
 # 共通ヘッダー
 st.markdown('<div class="clouds">☁️ ✈️ ☁️ ✈️ ☁️</div>', unsafe_allow_html=True)
-st.markdown('<h1 class="main-title">ラッキーフライト占い</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">✨ 浜田子供会ラッキー占い ✈️</h1>', unsafe_allow_html=True)
 
 
 if st.session_state.step == "input":
