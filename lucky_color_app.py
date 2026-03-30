@@ -5,7 +5,7 @@ import time
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="飛行機ラッキーカラー占い",
+    page_title="飛行機ラッキーカラー 占い",
     page_icon="✈️",
     layout="centered",
     initial_sidebar_state="collapsed"
