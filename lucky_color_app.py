@@ -96,9 +96,9 @@ div[data-testid="stHorizontalBlock"] {
     margin: 0 auto !important;
 }
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    width:42% !important; /* ボタンの横幅を42%に縮小 */
-    max-width:42% !important;
-    flex: 0 0 42% !important;
+    width:30% !important; /* ボタンの横幅を30%に縮小 */
+    max-width:30% !important;
+    flex: 0 0 30% !important;
     min-width:0 !important;
 }
 
