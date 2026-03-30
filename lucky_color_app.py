@@ -41,9 +41,25 @@ st.markdown("""<style>
 footer { visibility: hidden !important; display: none !important; }
 header { visibility: hidden !important; display: none !important; }
 
-/* Dynamic Background */
-.stApp { transition: background-color 0.5s ease; }
-.block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 500px; }
+/* Dynamic Background & Global No-Overflow Settings */
+body {
+    width: 100vw !important;
+    overflow-x: hidden !important;
+    margin: 0;
+    padding: 0;
+}
+.stApp { 
+    transition: background-color 0.5s ease; 
+    width: 100vw !important;
+    overflow-x: hidden !important;
+}
+.block-container { 
+    padding-top: 1.5rem; 
+    padding-bottom: 2rem; 
+    max-width: 500px; 
+    margin: 0 auto !important;
+    overflow-x: hidden !important;
+}
 .main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 20px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
 .result-card { background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: clamp(15px, 4vw, 25px); text-align: center; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); margin: 10px 0 20px 0; border: 3px dashed #81d4fa; display: flex; flex-direction: column; gap: 10px; }
 .fortune-text { font-size: clamp(3rem, 12vw, 5.5rem); font-weight: 900; color: #ff3d00; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 4px 4px 10px rgba(0,0,0,0.3); margin: 15px 0; line-height: 1.3; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
@@ -56,16 +72,20 @@ header { visibility: hidden !important; display: none !important; }
 .clouds { font-size: clamp(1.5rem, 5vw, 2.5rem); text-align: center; margin-bottom: 5px; animation: float 3s ease-in-out infinite; line-height: 1.2; }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
 
-/* スマホでも強制的に2列にするための設定 */
+/* スマホでも強制的に2列にするための設定（中央寄せ徹底） */
 div[data-testid="stHorizontalBlock"] {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     justify-content: center !important;
+    align-items: center !important;
     gap: 4% !important;
+    padding: 0 5% !important; /* 中央寄せを徹底するための余白 */
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    width: 47% !important;
-    flex: 0 0 47% !important;
+    width: 43% !important; /* ボタンの横幅を43%に縮小 */
+    flex: 0 0 43% !important;
     min-width: 0 !important;
 }
 
