@@ -64,8 +64,8 @@ div[data-testid="stHorizontalBlock"] {
     gap: 4% !important;
 }
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    width: 48% !important;
-    flex: 0 0 48% !important;
+    width: 47% !important;
+    flex: 0 0 47% !important;
     min-width: 0 !important;
 }
 
@@ -73,7 +73,7 @@ div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
 div.stButton > button { 
     font-weight: bold; 
     border-radius: 16px; 
-    padding: 10px 5px; 
+    padding: 8px 2px; 
     border: none; 
     box-shadow: 0px 6px 0px rgba(0, 0, 0, 0.15), 0px 10px 12px rgba(0, 0, 0, 0.2); 
     transition: all 0.1s ease-in-out; 
@@ -88,6 +88,12 @@ div.stButton > button {
     line-height: 1.2;
     overflow: hidden;
 }
+div.stButton > button > div {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 div.stButton > button:hover { 
     transform: translateY(3px); 
     box-shadow: 0px 5px 0px rgba(0, 0, 0, 0.15), 0px 8px 10px rgba(0, 0, 0, 0.2); 
@@ -99,9 +105,11 @@ div.stButton > button:active, div.stButton > button:focus:active {
     outline: none;
 }
 div.stButton > button p {
+    width: 100%;
     margin: 0;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: keep-all;
 }
 
 div[data-testid="stTextInput"] label p { font-size: 1.2rem; font-weight: bold; color: #007bb5; }
