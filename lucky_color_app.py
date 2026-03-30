@@ -56,24 +56,36 @@ header { visibility: hidden !important; display: none !important; }
 .clouds { font-size: clamp(1.5rem, 5vw, 2.5rem); text-align: center; margin-bottom: 5px; animation: float 3s ease-in-out infinite; line-height: 1.2; }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
 
+/* スマホでも強制的に2列にするための設定 */
+div[data-testid="stHorizontalBlock"] {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+}
+div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+    width: 50% !important;
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 0 !important;
+}
+
 /* Course Buttons Container (Plump & 3D) */
 div.stButton > button { 
     font-weight: bold; 
-    border-radius: 30px; 
-    padding: 10px; 
+    border-radius: 20px; 
+    padding: 5px; 
     border: none; 
-    box-shadow: 0px 8px 0px rgba(0, 0, 0, 0.15), 0px 12px 15px rgba(0, 0, 0, 0.2); 
+    box-shadow: 0px 6px 0px rgba(0, 0, 0, 0.15), 0px 10px 12px rgba(0, 0, 0, 0.2); 
     transition: all 0.1s ease-in-out; 
     width: 100%; 
     height: 100%;
-    min-height: 140px; 
-    margin-bottom: 15px; 
+    min-height: 120px; 
+    margin-bottom: 10px; 
     color: #ffffff; 
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 div.stButton > button:hover { 
     transform: translateY(3px); 
@@ -124,28 +136,28 @@ function styleButtons() {
         if(text.includes('スカイ運勢')) {
             btn.style.backgroundColor = '#1e88e5'; 
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🔵</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【王道】<br>スカイ運勢</span>';
+                p.innerHTML = '<span style="font-size:clamp(2rem, 6vw, 3rem); display:block; margin-bottom:3px;">🔵</span><span style="font-size:clamp(0.75rem, 3vw, 1rem); font-weight:bold;">【王道】<br>スカイ運勢</span>';
                 p.dataset.styled = "1";
             }
         }
         else if(text.includes('お笑いフライト')) {
             btn.style.backgroundColor = '#fb8c00';
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🟠</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【爆笑】<br>お笑いフライト</span>';
+                p.innerHTML = '<span style="font-size:clamp(2rem, 6vw, 3rem); display:block; margin-bottom:3px;">🟠</span><span style="font-size:clamp(0.75rem, 3vw, 1rem); font-weight:bold;">【爆笑】<br>お笑いフライト</span>';
                 p.dataset.styled = "1";
             }
         }
         else if(text.includes('アニマル運')) {
             btn.style.backgroundColor = '#ec407a';
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🌸</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【もふもふ】<br>アニマル運</span>';
+                p.innerHTML = '<span style="font-size:clamp(2rem, 6vw, 3rem); display:block; margin-bottom:3px;">🌸</span><span style="font-size:clamp(0.75rem, 3vw, 1rem); font-weight:bold;">【もふもふ】<br>アニマル運</span>';
                 p.dataset.styled = "1";
             }
         }
         else if(text.includes('星空・血液型')) {
             btn.style.backgroundColor = '#3949ab';
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🌌</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【ガチ】<br>星空・血液型</span>';
+                p.innerHTML = '<span style="font-size:clamp(2rem, 6vw, 3rem); display:block; margin-bottom:3px;">🌌</span><span style="font-size:clamp(0.75rem, 3vw, 1rem); font-weight:bold;">【ガチ】<br>星空・血液型</span>';
                 p.dataset.styled = "1";
             }
         }
@@ -155,7 +167,7 @@ function styleButtons() {
                 p.innerHTML = '<span style="font-size:clamp(2.5rem, 8vw, 3.5rem); display:block; margin-bottom:5px;">❤️</span><span style="font-size:clamp(1rem, 3.5vw, 1.2rem); font-weight:bold;">この2人で占う！</span>';
                 p.dataset.styled = "2";
             } else if (!text.includes('この2人で占う') && p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">❤️</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【二人で】<br>相性チェック</span>';
+                p.innerHTML = '<span style="font-size:clamp(2.5rem, 8vw, 3.5rem); display:block; margin-bottom:5px;">❤️</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【二人で】<br>相性チェック</span>';
                 p.dataset.styled = "1";
             }
         }
