@@ -92,14 +92,14 @@ div[data-testid="stHorizontalBlock"] {
     gap: 10px !important;
     padding: 0 !important; /* 中央寄せを徹底するためここはゼロ、コンテナ余白に依存 */
     box-sizing: border-box !important;
-    width: 100% !important;
+    width:100% !important;
     margin: 0 auto !important;
 }
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    width: 42% !important; /* ボタンの横幅を42%に縮小 */
-    max-width: 42% !important;
+    width:42% !important; /* ボタンの横幅を42%に縮小 */
+    max-width:42% !important;
     flex: 0 0 42% !important;
-    min-width: 0 !important;
+    min-width:0 !important;
 }
 
 /* Course Buttons Container (Plump & 3D) */
@@ -110,7 +110,7 @@ div.stButton > button {
     border: none; 
     box-shadow: 0px 6px 0px rgba(0, 0, 0, 0.15), 0px 10px 12px rgba(0, 0, 0, 0.2); 
     transition: all 0.1s ease-in-out; 
-    width: 100%; 
+    width:100%; 
     height: 100px;
     margin-bottom: 12px; 
     color: #ffffff; 
@@ -122,7 +122,7 @@ div.stButton > button {
     overflow: hidden;
 }
 div.stButton > button > div {
-    width: 100%;
+    width:100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -138,7 +138,7 @@ div.stButton > button:active, div.stButton > button:focus:active {
     outline: none;
 }
 div.stButton > button p {
-    width: 100%;
+    width:100%;
     margin: 0;
     text-align: center;
     white-space: nowrap !important;
