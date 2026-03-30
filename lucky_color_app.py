@@ -42,23 +42,31 @@ footer { visibility: hidden !important; display: none !important; }
 header { visibility: hidden !important; display: none !important; }
 
 /* Dynamic Background & Global No-Overflow Settings */
-body {
-    width: 100vw !important;
+html, body {
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: hidden !important;
     margin: 0;
     padding: 0;
+    height: auto !important;
+    min-height: 100vh !important;
 }
 .stApp { 
     transition: background-color 0.5s ease; 
-    width: 100vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh !important;
 }
 .block-container { 
     padding-top: 1.5rem; 
-    padding-bottom: 2rem; 
+    padding-bottom: 4rem !important; 
     max-width: 500px; 
     margin: 0 auto !important;
     overflow-x: hidden !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
 }
 .main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 20px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
 .result-card { background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: clamp(15px, 4vw, 25px); text-align: center; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); margin: 10px 0 20px 0; border: 3px dashed #81d4fa; display: flex; flex-direction: column; gap: 10px; }
@@ -79,13 +87,13 @@ div[data-testid="stHorizontalBlock"] {
     justify-content: center !important;
     align-items: center !important;
     gap: 4% !important;
-    padding: 0 5% !important; /* 中央寄せを徹底するための余白 */
+    padding: 0 !important; /* 中央寄せを徹底するためここはゼロ、コンテナ余白に依存 */
     box-sizing: border-box !important;
     width: 100% !important;
 }
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    width: 43% !important; /* ボタンの横幅を43%に縮小 */
-    flex: 0 0 43% !important;
+    width: 42% !important; /* ボタンの横幅を42%に縮小 */
+    flex: 0 0 42% !important;
     min-width: 0 !important;
 }
 
@@ -128,8 +136,9 @@ div.stButton > button p {
     width: 100%;
     margin: 0;
     text-align: center;
-    white-space: normal;
-    word-break: keep-all;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: clip; /* スマホで1行に収まるように */
 }
 
 div[data-testid="stTextInput"] label p { font-size: 1.2rem; font-weight: bold; color: #007bb5; }
@@ -166,28 +175,28 @@ function styleButtons() {
         if(text.includes('スカイ運勢')) {
             btn.style.backgroundColor = '#1e88e5'; 
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🔵</span><span style="font-size:clamp(0.6rem, 2.7vw, 0.85rem); font-weight:bold;">【王道】スカイ運勢</span>';
+                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🔵</span><span style="font-size:clamp(0.55rem, 2.4vw, 0.75rem); font-weight:bold; letter-spacing:-0.5px;">【王道】スカイ運勢</span>';
                 p.dataset.styled = "1";
             }
         }
         else if(text.includes('お笑いフライト')) {
             btn.style.backgroundColor = '#fb8c00';
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🟠</span><span style="font-size:clamp(0.6rem, 2.7vw, 0.85rem); font-weight:bold;">【爆笑】お笑いフライト</span>';
+                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🟠</span><span style="font-size:clamp(0.55rem, 2.4vw, 0.75rem); font-weight:bold; letter-spacing:-0.5px;">【爆笑】お笑いフライト</span>';
                 p.dataset.styled = "1";
             }
         }
         else if(text.includes('アニマル運')) {
             btn.style.backgroundColor = '#ec407a';
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🌸</span><span style="font-size:clamp(0.6rem, 2.7vw, 0.85rem); font-weight:bold;">【もふもふ】アニマル運</span>';
+                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🌸</span><span style="font-size:clamp(0.55rem, 2.4vw, 0.75rem); font-weight:bold; letter-spacing:-0.5px;">【もふもふ】アニマル運</span>';
                 p.dataset.styled = "1";
             }
         }
         else if(text.includes('星空・血液型')) {
             btn.style.backgroundColor = '#3949ab';
             if(p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🌌</span><span style="font-size:clamp(0.6rem, 2.7vw, 0.85rem); font-weight:bold;">【ガチ】星空・血液型</span>';
+                p.innerHTML = '<span style="font-size:clamp(1.5rem, 5vw, 2.2rem); display:block; margin-bottom:2px;">🌌</span><span style="font-size:clamp(0.55rem, 2.4vw, 0.75rem); font-weight:bold; letter-spacing:-0.5px;">【ガチ】星空・血液型</span>';
                 p.dataset.styled = "1";
             }
         }
@@ -195,10 +204,10 @@ function styleButtons() {
             btn.style.backgroundColor = '#e53935';
             btn.style.height = '120px'; /* 相性チェックだけ少し高くして操作しやすく */
             if(text.includes('この2人で占う') && p.dataset.styled !== "2") {
-                p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">❤️</span><span style="font-size:clamp(0.8rem, 3.5vw, 1.1rem); font-weight:bold;">この2人で占う！</span>';
+                p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">❤️</span><span style="font-size:clamp(0.75rem, 3.2vw, 1.0rem); font-weight:bold;">この2人で占う！</span>';
                 p.dataset.styled = "2";
             } else if (!text.includes('この2人で占う') && p.dataset.styled !== "1") {
-                p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">❤️</span><span style="font-size:clamp(0.8rem, 3.5vw, 1.1rem); font-weight:bold;">【二人で】相性チェック</span>';
+                p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">❤️</span><span style="font-size:clamp(0.75rem, 3.2vw, 1.0rem); font-weight:bold;">【二人で】相性チェック</span>';
                 p.dataset.styled = "1";
             }
         }
