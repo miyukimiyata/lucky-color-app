@@ -43,8 +43,8 @@ header { visibility: hidden !important; display: none !important; }
 
 /* Dynamic Background */
 .stApp { transition: background-color 0.5s ease; }
-.block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 500px; }
-.main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 40px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
+.block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 500px; }
+.main-title { font-size: clamp(1.3rem, 4.5vw, 2rem); color: #007bb5; text-align: center; text-shadow: 1px 1px 2px #fff; margin-top: 20px; margin-bottom: 20px; font-weight: bold; line-height: 1.4; }
 .result-card { background-color: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: clamp(15px, 4vw, 25px); text-align: center; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); margin: 10px 0 20px 0; border: 3px dashed #81d4fa; display: flex; flex-direction: column; gap: 10px; }
 .fortune-text { font-size: clamp(3rem, 12vw, 5.5rem); font-weight: 900; color: #ff3d00; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 4px 4px 10px rgba(0,0,0,0.3); margin: 15px 0; line-height: 1.3; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -56,10 +56,40 @@ header { visibility: hidden !important; display: none !important; }
 .clouds { font-size: clamp(1.5rem, 5vw, 2.5rem); text-align: center; margin-bottom: 5px; animation: float 3s ease-in-out infinite; line-height: 1.2; }
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0px); } }
 
-/* Course Buttons Container */
-div.stButton > button { font-weight: bold; border-radius: 50px; padding: 10px 10px; font-size: clamp(1.2rem, 4vw, 1.5rem); border: none; box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2); transition: all 0.2s; width: 100%; min-height: 60px; margin-top: 10px; color: #333; }
-div.stButton > button:hover { transform: scale(1.02); filter: brightness(1.1); }
-div.stButton > button:active { transform: scale(0.98); box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2); }
+/* Course Buttons Container (Plump & 3D) */
+div.stButton > button { 
+    font-weight: bold; 
+    border-radius: 30px; 
+    padding: 10px; 
+    border: none; 
+    box-shadow: 0px 8px 0px rgba(0, 0, 0, 0.15), 0px 12px 15px rgba(0, 0, 0, 0.2); 
+    transition: all 0.1s ease-in-out; 
+    width: 100%; 
+    height: 100%;
+    min-height: 140px; 
+    margin-bottom: 15px; 
+    color: #ffffff; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
+}
+div.stButton > button:hover { 
+    transform: translateY(3px); 
+    box-shadow: 0px 5px 0px rgba(0, 0, 0, 0.15), 0px 8px 10px rgba(0, 0, 0, 0.2); 
+    filter: brightness(1.1); 
+}
+div.stButton > button:active, div.stButton > button:focus:active { 
+    transform: translateY(8px); 
+    box-shadow: 0px 0px 0px rgba(0, 0, 0, 0.15), 0px 2px 4px rgba(0, 0, 0, 0.2); 
+    outline: none;
+}
+div.stButton > button p {
+    margin: 0;
+    text-align: center;
+}
+
 div[data-testid="stTextInput"] label p { font-size: 1.2rem; font-weight: bold; color: #007bb5; }
 div[data-testid="stTextInput"] input { font-size: 1.2rem; padding: 12px; border-radius: 15px; border: 2px solid #81d4fa; box-shadow: 0px 4px 6px rgba(0,0,0,0.05); }
 
@@ -87,12 +117,48 @@ components.html("""
 function styleButtons() {
     const btns = window.parent.document.querySelectorAll('button');
     btns.forEach(btn => {
-        const text = btn.innerText;
-        if(text.includes('スカイ運勢')) { btn.style.backgroundColor = '#1e88e5'; btn.style.color = '#ffffff'; }
-        else if(text.includes('お笑いフライト')) { btn.style.backgroundColor = '#fb8c00'; btn.style.color = '#ffffff'; }
-        else if(text.includes('アニマル運')) { btn.style.backgroundColor = '#ec407a'; btn.style.color = '#ffffff'; }
-        else if(text.includes('星空・血液型')) { btn.style.backgroundColor = '#3949ab'; btn.style.color = '#ffffff'; }
-        else if(text.includes('相性チェック')) { btn.style.backgroundColor = '#e53935'; btn.style.color = '#ffffff'; }
+        const p = btn.querySelector('p');
+        if(!p) return;
+        const text = p.innerText;
+        
+        if(text.includes('スカイ運勢')) {
+            btn.style.backgroundColor = '#1e88e5'; 
+            if(p.dataset.styled !== "1") {
+                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🔵</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【王道】<br>スカイ運勢</span>';
+                p.dataset.styled = "1";
+            }
+        }
+        else if(text.includes('お笑いフライト')) {
+            btn.style.backgroundColor = '#fb8c00';
+            if(p.dataset.styled !== "1") {
+                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🟠</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【爆笑】<br>お笑いフライト</span>';
+                p.dataset.styled = "1";
+            }
+        }
+        else if(text.includes('アニマル運')) {
+            btn.style.backgroundColor = '#ec407a';
+            if(p.dataset.styled !== "1") {
+                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🌸</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【もふもふ】<br>アニマル運</span>';
+                p.dataset.styled = "1";
+            }
+        }
+        else if(text.includes('星空・血液型')) {
+            btn.style.backgroundColor = '#3949ab';
+            if(p.dataset.styled !== "1") {
+                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">🌌</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【ガチ】<br>星空・血液型</span>';
+                p.dataset.styled = "1";
+            }
+        }
+        else if(text.includes('相性チェック') || text.includes('この2人で占う')) {
+            btn.style.backgroundColor = '#e53935';
+            if(text.includes('この2人で占う') && p.dataset.styled !== "2") {
+                p.innerHTML = '<span style="font-size:clamp(2.5rem, 8vw, 3.5rem); display:block; margin-bottom:5px;">❤️</span><span style="font-size:clamp(1rem, 3.5vw, 1.2rem); font-weight:bold;">この2人で占う！</span>';
+                p.dataset.styled = "2";
+            } else if (!text.includes('この2人で占う') && p.dataset.styled !== "1") {
+                p.innerHTML = '<span style="font-size:clamp(3rem, 10vw, 4rem); display:block; margin-bottom:5px;">❤️</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.1rem); font-weight:bold;">【二人で】<br>相性チェック</span>';
+                p.dataset.styled = "1";
+            }
+        }
     });
 }
 styleButtons();
@@ -251,16 +317,21 @@ if st.session_state.step == "input":
             user_input2 = st.text_input("おなまえ 2", value=st.session_state.user_name2, placeholder="ひらがな", max_chars=15)
             st.session_state.user_name2 = user_input2
 
-    # ボタン表示
-    btn_normal = st.button("🔵 【王道】スカイ運勢")
-    btn_funny = st.button("🟠 【爆笑】お笑いフライト")
-    btn_animal = st.button("🌸 【もふもふ】アニマル運")
-    btn_gachi = st.button("🌌 【ガチ】星空・血液型")
+    # ボタン表示（2列グリッド）
+    col_left, col_right = st.columns(2)
+    with col_left:
+        btn_normal = st.button("🔵 スカイ運勢", use_container_width=True)
+        btn_animal = st.button("🌸 アニマル運", use_container_width=True)
+    with col_right:
+        btn_funny = st.button("🟠 お笑いフライト", use_container_width=True)
+        btn_gachi = st.button("🌌 星空・血液型", use_container_width=True)
+        
+    st.markdown('<div style="margin-top:5px;"></div>', unsafe_allow_html=True)
     
     if st.session_state.is_pair_mode:
-        btn_pair = st.button("❤️ この2人で占う！（相性チェック実行）")
+        btn_pair = st.button("❤️ この2人で占う！（相性チェック実行）", use_container_width=True)
     else:
-        btn_pair = st.button("❤️ 【二人で】相性チェック")
+        btn_pair = st.button("❤️ 相性チェック", use_container_width=True)
 
     # 実行制御
     if btn_normal:
