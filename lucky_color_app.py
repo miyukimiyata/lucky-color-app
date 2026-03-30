@@ -42,6 +42,9 @@ footer { visibility: hidden !important; display: none !important; }
 header { visibility: hidden !important; display: none !important; }
 
 /* Dynamic Background & Global No-Overflow Settings */
+* {
+    box-sizing: border-box !important;
+}
 html, body {
     width: 100% !important;
     max-width: 100% !important;
@@ -61,7 +64,7 @@ html, body {
 }
 .block-container { 
     padding-top: 1.5rem; 
-    padding-bottom: 4rem !important; 
+    padding-bottom: 6rem !important; 
     max-width: 500px; 
     margin: 0 auto !important;
     overflow-x: hidden !important;
@@ -90,9 +93,11 @@ div[data-testid="stHorizontalBlock"] {
     padding: 0 !important; /* 中央寄せを徹底するためここはゼロ、コンテナ余白に依存 */
     box-sizing: border-box !important;
     width: 100% !important;
+    margin: 0 auto !important;
 }
 div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
     width: 42% !important; /* ボタンの横幅を42%に縮小 */
+    max-width: 42% !important;
     flex: 0 0 42% !important;
     min-width: 0 !important;
 }
@@ -208,6 +213,14 @@ function styleButtons() {
                 p.dataset.styled = "2";
             } else if (!text.includes('この2人で占う') && p.dataset.styled !== "1") {
                 p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">❤️</span><span style="font-size:clamp(0.75rem, 3.2vw, 1.0rem); font-weight:bold;">【二人で】相性チェック</span>';
+                p.dataset.styled = "1";
+            }
+        }
+        else if(text.includes('もう一度')) {
+            btn.style.backgroundColor = '#4caf50';
+            btn.style.height = '100px';
+            if(p.dataset.styled !== "1") {
+                p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">🔄</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.2rem); font-weight:bold;">もう一度あそぶ</span>';
                 p.dataset.styled = "1";
             }
         }
@@ -492,7 +505,7 @@ elif st.session_state.step == "result":
 
     st.markdown(html_content, unsafe_allow_html=True)
 
-    if st.button("🔄 もどる・別のコースであそぶ", use_container_width=True):
+    if st.button("🔄 もう一度あそぶ", use_container_width=True):
         st.session_state.step = "input"
         st.session_state.is_pair_mode = False
         st.session_state.user_name = ""
