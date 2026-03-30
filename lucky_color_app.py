@@ -89,7 +89,7 @@ div[data-testid="stHorizontalBlock"] {
     flex-wrap: nowrap !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 4% !important;
+    gap: 10px !important;
     padding: 0 !important; /* 中央寄せを徹底するためここはゼロ、コンテナ余白に依存 */
     box-sizing: border-box !important;
     width: 100% !important;
@@ -219,6 +219,7 @@ function styleButtons() {
         else if(text.includes('もう一度')) {
             btn.style.backgroundColor = '#4caf50';
             btn.style.height = '100px';
+            btn.style.marginBottom = '50px';
             if(p.dataset.styled !== "1") {
                 p.innerHTML = '<span style="font-size:clamp(1.8rem, 6vw, 2.5rem); display:block; margin-bottom:4px;">🔄</span><span style="font-size:clamp(0.9rem, 3.5vw, 1.2rem); font-weight:bold;">もう一度あそぶ</span>';
                 p.dataset.styled = "1";
@@ -295,7 +296,7 @@ birthday_list = {
     "いちな": "0601", "みつき": "0602", "りと": "0603", "えいこう": "0604",
     "すず": "0605", "えま": "0606", "ひなの": "0607", "ふうが": "0608",
     "ゆう": "0609", "みひろ": "0610", "しょうり": "0611", "りょうま": "0612",
-    "じゅきあ": "0613", "りゅうき": "0614", "はるた": "0615", "しょうま": "0616",
+    "じゅきあ": "0613", "りゅうき": "0614", "はるた": "0330", "しょうま": "0616",
     "じょうたろう": "0617", "あやと": "0618", "しょうた": "0619", "ひろむ": "0329"
 }
 
@@ -512,4 +513,4 @@ elif st.session_state.step == "result":
         st.session_state.user_name2 = ""
         st.rerun()
 
-st.markdown('<div class="clouds" style="margin-top:15px;">☁️ ✨ ☁️ ✨ ☁️</div>', unsafe_allow_html=True)
+st.markdown('<div class="clouds" style="margin-top:15px; margin-bottom:50px;">☁️ ✨ ☁️ ✨ ☁️</div>', unsafe_allow_html=True)
