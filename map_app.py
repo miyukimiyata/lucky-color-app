@@ -72,7 +72,10 @@ st.title("📍 廃品回収 状態管理")
 # -------------------
 st.markdown('<div class="map-container">', unsafe_allow_html=True)
 
-st.image("map.png", use_container_width=True)
+st.markdown("""
+<div style="position: relative; width: 100%; max-width: 700px; margin: auto;">
+    <img src="map.png" style="width:100%; border-radius:10px;">
+""", unsafe_allow_html=True)
 
 # -------------------
 # 座標（ざっくり配置）
@@ -108,21 +111,22 @@ for zone, (x, y) in positions.items():
         position:absolute;
         left:{x}%;
         top:{y}%;
+        transform: translate(-50%, -50%);
     ">
-        <form action="" method="post">
-            <button style="
-                background:{color};
-                border-radius:50%;
-                padding:10px;
-                color:white;
-                border:none;
-                font-size:12px;
-            ">
-                {zone}
-            </button>
-        </form>
+        <button style="
+            background:{color};
+            border-radius:50%;
+            padding:10px;
+            color:white;
+            border:none;
+            font-size:12px;
+        ">
+            {zone}
+        </button>
     </div>
     """, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------
 # タップUI（代替）
