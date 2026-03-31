@@ -126,16 +126,39 @@ st.markdown("</div>", unsafe_allow_html=True)
 # -------------------
 # タップUI（代替）
 # -------------------
-st.markdown("### ▼ タップ用リスト")
+st.markdown("### ▼ 状態をタップして変更")
 
-for zone in st.session_state.zones:
-    col1, col2 = st.columns([3,1])
-    with col1:
-        st.write(zone)
-    with col2:
-        if st.button(status_labels[st.session_state.zones[zone]], key=zone):
-            toggle(zone)
-            st.rerun()
+zones_list = list(st.session_state.zones.keys())
+
+for i in range(0, len(zones_list), 2):
+    cols = st.columns(2)
+    for j in range(2):
+        if i + j < len(zones_list):
+            zone = zones_list[i + j]
+            status = st.session_state.zones[zone]
+            label = status_labels[status]
+            color = status_colors[status]
+
+            with cols[j]:
+                st.markdown(
+                    f"""
+                    <div style="
+                        background:{color};
+                        padding:10px 14px;
+                        border-radius:12px;
+                        text-align:center;
+                        font-weight:bold;
+                        color:#333;
+                        margin-bottom:6px;
+                    ">
+                        {zone}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                if st.button(f"{label}", key=f"btn_{zone}", use_container_width=True):
+                    toggle(zone)
+                    st.rerun()
 
 # -------------------
 # 凡例
