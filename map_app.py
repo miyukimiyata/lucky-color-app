@@ -130,35 +130,31 @@ st.markdown("### ▼ 状態をタップして変更")
 
 zones_list = list(st.session_state.zones.keys())
 
-for i in range(0, len(zones_list), 2):
-    cols = st.columns(2)
-    for j in range(2):
-        if i + j < len(zones_list):
-            zone = zones_list[i + j]
-            status = st.session_state.zones[zone]
-            label = status_labels[status]
-            color = status_colors[status]
+for zone in zones_list:
+    status = st.session_state.zones[zone]
+    label = status_labels[status]
+    color = status_colors[status]
 
-            with cols[j]:
-                st.markdown(
-                    f"""
-                    <div style="
-                        background:{color};
-                        padding:10px 14px;
-                        border-radius:12px;
-                        text-align:center;
-                        font-weight:bold;
-                        color:#333;
-                        margin-bottom:6px;
-                    ">
-                        {zone}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                if st.button(f"{label}", key=f"btn_{zone}", use_container_width=True):
-                    toggle(zone)
-                    st.rerun()
+    button_html = f"""
+    <div style="
+        background:{color};
+        padding:14px 10px;
+        border-radius:16px;
+        text-align:center;
+        font-weight:bold;
+        color:#333;
+        margin-bottom:8px;
+        line-height:1.5;
+        font-size:1.2rem;
+    ">
+        {zone}<br>{label}
+    </div>
+    """
+
+    st.markdown(button_html, unsafe_allow_html=True)
+    if st.button("状態を変更", key=f"btn_{zone}", use_container_width=True):
+        toggle(zone)
+        st.rerun()
 
 # -------------------
 # 凡例
