@@ -70,12 +70,7 @@ st.title("📍 廃品回収 状態管理")
 # -------------------
 # 地図表示
 # -------------------
-st.markdown('<div class="map-container">', unsafe_allow_html=True)
-
-st.markdown("""
-<div style="position: relative; width: 100%; max-width: 700px; margin: auto;">
-    <img src="map.png" style="width:100%; border-radius:10px;">
-""", unsafe_allow_html=True)
+st.image("map.png", use_container_width=True)
 
 # -------------------
 # 座標（ざっくり配置）
