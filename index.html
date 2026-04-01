@@ -252,47 +252,51 @@ function updateCoordDisplay() {
 }
 
 
-// --- 既存の script タグの中、render関数の下などに追加してください ---
-
-// 1. クリックした場所の座標を記録する一時配列
+// --- 1. データを貯める場所 ---
 let tempPoints = [];
 
-// 2. 地図エリアにクリックイベントを追加
-const mapArea = document.getElementById("mapArea");
+// --- 2. 地図エリア（mapArea）をクリックした時の処理 ---
+document.getElementById("mapArea").onclick = function(e) {
+  var rect = this.getBoundingClientRect();
+  var x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+  var y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
 
-mapArea.addEventListener("click", function(e) {
-  // 地図の左上からのクリック位置を計算
-  const rect = mapArea.getBoundingClientRect();
-  const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
-  const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
-
-  // 配列に追加 [x, y]
   tempPoints.push([x, y]);
-
-  // コンソールと画面に見やすく表示
-  console.log(`現在のポリゴンデータ: [${tempPoints.map(p => `[${p[0]},${p[1]}]`).join(",")}]`);
   
-  // 画面上にリアルタイムで座標リストを表示（確認用）
-  updateCoordDisplay();
-});
+  // 画面の下に帯を表示・更新する
+  updateDebugPanel();
+};
 
-// 座標表示用のエリアを画面の一番下に追加する関数
-function updateCoordDisplay() {
-  let display = document.getElementById("coord-debug");
-  if (!display) {
-    display = document.createElement("div");
-    display.id = "coord-debug";
-    display.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:#0f0; padding:10px; font-family:monospace; z-index:9999; font-size:12px; max-height:150px; overflow-y:auto;";
-    document.body.appendChild(display);
+// --- 3. 画面の下に黒い帯を出す関数 ---
+function updateDebugPanel() {
+  var panel = document.getElementById("debug-panel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "debug-panel";
+    panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.9); color:#0f0; padding:15px; z-index:9999; font-family:monospace; font-size:12px; border-top:2px solid #0f0;";
+    document.body.appendChild(panel);
   }
+
+  // 表示するテキストを作成
+  var coordsText = JSON.stringify(tempPoints);
   
-  display.innerHTML = `
-    <div><strong>クリックした座標（これをコピーして polygons に貼り付け）:</strong></div>
-    <div style="word-break:break-all;">[${tempPoints.map(p => `[${p[0]},${p[1]}]`).join(",")}]</div>
-    <button onclick="tempPoints=[]; updateCoordDisplay();" style="margin-top:5px;">リセット</button>
-    <button onclick="navigator.clipboard.writeText(document.getElementById('coord-debug').children[1].innerText); alert('コピーしました！')" style="margin-top:5px;">コピーする</button>
-  `;
+  panel.innerHTML = 
+    '<div><strong>座標取得中:</strong></div>' +
+    '<div id="coords-val" style="word-break:break-all; margin:5px 0; background:#222; padding:5px;">' + coordsText + '</div>' +
+    '<button onclick="copyToClip()">コピー</button> ' +
+    '<button onclick="resetCoords()">リセット</button>';
 }
-</script>
+
+// --- 4. コピーとリセットの機能 ---
+window.copyToClip = function() {
+  var val = document.getElementById("coords-val").innerText;
+  navigator.clipboard.writeText(val);
+  alert("コピーしました！");
+};
+
+window.resetCoords = function() {
+  tempPoints = [];
+  updateDebugPanel();
+};</script>
 </body>
 </html>
