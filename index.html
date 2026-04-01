@@ -250,6 +250,49 @@ function updateCoordDisplay() {
     <button onclick="navigator.clipboard.writeText(document.getElementById('coord-debug').children[1].innerText); alert('コピーしました！')" style="margin-top:5px;">コピーする</button>
   `;
 }
+
+
+// --- 既存の script タグの中、render関数の下などに追加してください ---
+
+// 1. クリックした場所の座標を記録する一時配列
+let tempPoints = [];
+
+// 2. 地図エリアにクリックイベントを追加
+const mapArea = document.getElementById("mapArea");
+
+mapArea.addEventListener("click", function(e) {
+  // 地図の左上からのクリック位置を計算
+  const rect = mapArea.getBoundingClientRect();
+  const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+  const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
+
+  // 配列に追加 [x, y]
+  tempPoints.push([x, y]);
+
+  // コンソールと画面に見やすく表示
+  console.log(`現在のポリゴンデータ: [${tempPoints.map(p => `[${p[0]},${p[1]}]`).join(",")}]`);
+  
+  // 画面上にリアルタイムで座標リストを表示（確認用）
+  updateCoordDisplay();
+});
+
+// 座標表示用のエリアを画面の一番下に追加する関数
+function updateCoordDisplay() {
+  let display = document.getElementById("coord-debug");
+  if (!display) {
+    display = document.createElement("div");
+    display.id = "coord-debug";
+    display.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.8); color:#0f0; padding:10px; font-family:monospace; z-index:9999; font-size:12px; max-height:150px; overflow-y:auto;";
+    document.body.appendChild(display);
+  }
+  
+  display.innerHTML = `
+    <div><strong>クリックした座標（これをコピーして polygons に貼り付け）:</strong></div>
+    <div style="word-break:break-all;">[${tempPoints.map(p => `[${p[0]},${p[1]}]`).join(",")}]</div>
+    <button onclick="tempPoints=[]; updateCoordDisplay();" style="margin-top:5px;">リセット</button>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('coord-debug').children[1].innerText); alert('コピーしました！')" style="margin-top:5px;">コピーする</button>
+  `;
+}
 </script>
 </body>
 </html>
