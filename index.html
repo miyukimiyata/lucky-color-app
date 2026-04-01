@@ -3,57 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>廃品回収 状態管理</title>
+  <title>廃品回収 状態管理（時刻記録版）</title>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { 
-      margin: 0; 
-      font-family: sans-serif; 
-      background: #f0f0f0; 
-      padding-bottom: 120px; 
-      overflow-x: auto; /* ズーム時の横スクロールを許可 */
+      margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 120px; overflow-x: auto; 
     }
     .container { max-width: 100%; margin: 0 auto; padding: 10px; }
     h1 { text-align: center; font-size: 1.2rem; margin: 10px 0; }
 
-    /* 地図コンテナ */
     .map-container {
-      position: relative; 
-      width: 100%; 
-      background: #ccc; 
-      line-height: 0;
-      border-radius: 10px; 
-      overflow: hidden; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      touch-action: pinch-zoom; /* ズーム操作を優先 */
+      position: relative; width: 100%; background: #ccc; line-height: 0;
+      border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      touch-action: pinch-zoom;
     }
     .map-image { width: 100%; height: auto; display: block; }
-    
-    /* SVG & ラベル */
     #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
     .label-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
     
+    /* 地図上のラベル（極めてシンプルに） */
     .zone-label {
       position: absolute; transform: translate(-50%, -50%); text-align: center;
       pointer-events: auto; cursor: pointer;
     }
-.z-name, .z-status {
-      display: block;
-      color: #000; /* 文字色は黒 */
-      font-weight: bold; /* 太字 */
-      white-space: nowrap;
-      line-height: 1.1;
-      /* 単純な1画素の白縁取り（影） */
-      text-shadow: 
-        1px 1px 0 #fff, -1px -1px 0 #fff, 
-        1px -1px 0 #fff, -1px 1px 0 #fff;
+    .z-name, .z-status {
+      display: block; color: #000; font-weight: bold; white-space: nowrap; line-height: 1.1;
+      text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff; /* 最小限の縁取り */
     }
-    .z-name { font-size: 0.9rem; } /* 少し大きく調整 */
-    .z-status { font-size: 0.7rem; }
+    .z-name { font-size: 0.85rem; }
+    .z-status { font-size: 0.65rem; }
 
-    /* リスト表示 */
-    .list-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 20px; }
-    .card { padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000; }
+    /* 下のカード（時刻表示用） */
+    .list-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 20px; }
+    .card { 
+      padding: 10px; border-radius: 8px; text-align: left; /* 左寄せに変更 */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000;
+    }
+    .card-title { font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 4px; }
+    .card-time { font-size: 0.75rem; line-height: 1.4; }
+    
     .btn-reset { display: block; width: 120px; margin: 15px auto; padding: 8px; background: #444; color: white; border: none; border-radius: 5px; font-weight: bold; }
   </style>
 </head>
@@ -83,7 +71,7 @@
   const zones = [
     { name: "1区", x: 60, y: 65 }, { name: "1区A", x: 60, y: 45 }, { name: "1区B", x: 82, y: 45 },
     { name: "2区", x: 35, y: 65 }, { name: "3区", x: 55, y: 75 }, { name: "4区", x:60, y: 81 },
-    { name: "5区", x: 55, y: 92 }, { name: "7区", x: 42, y: 95 }, { name: "8区", x: 40, y: 80 },
+    { name: "5区", x: 55, y: 92 }, { name: "7区", x: 42, y: 95 }, { name: "8区", x: 40, y: 83 },
     { name: "9区A", x: 18, y: 19 }, { name: "9区B", x: 18, y: 43 }, { name: "9区C", x: 40, y: 10 },
     { name: "9区D", x: 50, y: 22 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 67, y: 34 }
   ];
@@ -108,24 +96,38 @@
     "9区G": [[58,31.4],[65.2,27.7],[64.6,30.9],[66.7,31.2],[66.5,32.6],[68.2,32.7],[68.6,30.9],[70.6,31.1],[70.5,32.8],[70.3,34.8],[74,33.6],[73.6,32.8],[74.1,31.4],[75.8,31.6],[76,32.9],[76.9,34.6],[60,39.9],[58.7,32.5],[58,31.5]]
   };
 
-  let state = {};
-  const KEY = "haipin_v8_final";
+ let state = {};
+  const KEY = "haipin_v9_time";
 
   function load() {
     const s = localStorage.getItem(KEY);
     state = s ? JSON.parse(s) : {};
-    zones.forEach(z => { if(state[z.name] === undefined) state[z.name] = 0; });
+    zones.forEach(z => { 
+      if(!state[z.name]) state[z.name] = { status: 0, start: "", end: "" }; 
+    });
+  }
+
+  function getCurrentTime() {
+    const now = new Date();
+    return now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
   }
 
   function toggleStatus(name) {
-    state[name] = (state[name] + 1) % 4;
+    let z = state[name];
+    z.status = (z.status + 1) % 4;
+    
+    // 時刻の自動記録
+    if (z.status === 0) { z.start = ""; z.end = ""; } // 未着手
+    else if (z.status === 1) { z.start = getCurrentTime(); } // 開始
+    else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); } // 完了
+    
     localStorage.setItem(KEY, JSON.stringify(state));
     render();
   }
 
   function resetProgress() {
     if(confirm("すべてリセットしますか？")) {
-      zones.forEach(z => state[z.name] = 0);
+      zones.forEach(z => state[z.name] = { status: 0, start: "", end: "" });
       localStorage.setItem(KEY, JSON.stringify(state));
       render();
     }
@@ -136,11 +138,12 @@
     svg.innerHTML = "";
     Object.keys(polygons).forEach(name => {
       const data = polygons[name];
+      const statusIdx = state[name].status;
       const islandList = (Array.isArray(data[0][0])) ? data : [data];
       islandList.forEach(points => {
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
-        p.setAttribute("fill", STATUS[state[name]].color);
+        p.setAttribute("fill", STATUS[statusIdx].color);
         p.setAttribute("fill-opacity", "0.6");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.2");
@@ -157,7 +160,7 @@
       div.className = "zone-label";
       div.style.left = z.x + "%";
       div.style.top = z.y + "%";
-      div.innerHTML = '<span class="z-name">' + z.name + '</span><span class="z-status">' + STATUS[state[z.name]].label + '</span>';
+      div.innerHTML = `<span class="z-name">${z.name}</span><span class="z-status">${STATUS[state[z.name].status].label}</span>`;
       div.onclick = (e) => { e.stopPropagation(); toggleStatus(z.name); };
       layer.appendChild(div);
     });
@@ -165,10 +168,17 @@
     const lv = document.getElementById("listView");
     lv.innerHTML = "";
     zones.forEach(z => {
+      const s = state[z.name];
       const c = document.createElement("div");
       c.className = "card";
-      c.style.background = STATUS[state[z.name]].color;
-      c.innerHTML = z.name + '<br><small>' + STATUS[state[z.name]].label + '</small>';
+      c.style.background = STATUS[s.status].color;
+      c.innerHTML = `
+        <div class="card-title">${z.name} (${STATUS[s.status].label})</div>
+        <div class="card-time">
+          開始：${s.start || '--:--'}<br>
+          完了：${s.end || '--:--'}
+        </div>
+      `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
@@ -177,9 +187,6 @@
   load();
   window.onload = render;
   setTimeout(render, 500);
-
-  // 【座標取得ツール】はズレ防止のためあえて簡略化して残しています
-  // 必要な時だけコンソール（F12）で確認するか、以前のツールコードを足してください。
 </script>
 </body>
 </html>
