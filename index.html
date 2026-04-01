@@ -37,13 +37,19 @@
       position: absolute; transform: translate(-50%, -50%); text-align: center;
       pointer-events: auto; cursor: pointer;
     }
-    .z-name, .z-status {
-      display: block; color: #000; font-weight: 900; white-space: nowrap; line-height: 1.1;
-      text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff,
-                   0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff;
+.z-name, .z-status {
+      display: block;
+      color: #000; /* 文字色は黒 */
+      font-weight: bold; /* 太字 */
+      white-space: nowrap;
+      line-height: 1.1;
+      /* 単純な1画素の白縁取り（影） */
+      text-shadow: 
+        1px 1px 0 #fff, -1px -1px 0 #fff, 
+        1px -1px 0 #fff, -1px 1px 0 #fff;
     }
-    .z-name { font-size: 0.8rem; }
-    .z-status { font-size: 0.6rem; }
+    .z-name { font-size: 0.9rem; } /* 少し大きく調整 */
+    .z-status { font-size: 0.7rem; }
 
     /* リスト表示 */
     .list-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 20px; }
