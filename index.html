@@ -6,101 +6,88 @@
   <title>廃品回収 状態管理</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: sans-serif; background: #f5f5f5; color: #222; }
+    body { margin: 0; font-family: sans-serif; background: #f5f5f5; }
     .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
-    h1 { font-size: 1.6rem; text-align: center; margin-bottom: 10px; }
-    .sub { text-align: center; color: #666; margin-bottom: 16px; font-size: 0.9rem; }
 
-    /* サマリー・凡例 */
-    .summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; justify-content: center; }
-    .summary-box { padding: 8px 12px; border-radius: 10px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; font-size: 0.9rem; }
-    .legend { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 4px; background: white; padding: 6px 10px; border-radius: 20px; font-size: 0.8rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); }
-
-    /* 地図エリア本体 */
+    /* 地図エリア（ここが肝心） */
     .map-area {
       position: relative;
       width: 100%;
-      min-height: 200px; /* 画像読み込み前でも領域を確保 */
-      background: #eee;
+      line-height: 0;
+      background: #ccc;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
     }
     .map-image {
-      display: block;
       width: 100%;
       height: auto;
-      z-index: 1;
+      display: block;
     }
 
-    /* SVGレイヤー */
-    #zoneSvg {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    }
-    #zoneSvg polygon { pointer-events: auto; cursor: pointer; }
-
-    /* 地区名ラベル（ボタン） */
+    /* ボタンのデザイン：背景なし、文字は黒、強力な白縁 */
     .zone-btn {
       position: absolute;
       transform: translate(-50%, -50%);
-      border: none;
       background: transparent;
+      border: none;
+      cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10; /* 画像やSVGより上 */
-      padding: 5px;
-      pointer-events: auto;
+      z-index: 999; /* 最前面に強制 */
+      padding: 10px; /* タップしやすく */
     }
+
     .zone-name, .zone-status {
       color: #000;
       font-weight: 900;
-      line-height: 1.1;
-      text-align: center;
       white-space: nowrap;
-      text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff;
+      line-height: 1.2;
+      /* 白い縁取り（これがあれば背景が何色でも読めます） */
+      text-shadow: 
+        2px 2px 0 #fff, -2px -2px 0 #fff, 
+        2px -2px 0 #fff, -2px 2px 0 #fff,
+        0 2px 0 #fff, 0 -2px 0 #fff,
+        2px 0 0 #fff, -2px 0 0 #fff;
     }
-    .zone-name { font-size: 0.9rem; }
-    .zone-status { font-size: 0.7rem; }
+    .zone-name { font-size: 1rem; }
+    .zone-status { font-size: 0.8rem; }
 
-    /* リストエリア */
-    .list-area { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .zone-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-    .zone-card { border-radius: 10px; padding: 10px; cursor: pointer; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.1); font-size: 0.9rem; }
-    .reset-btn { display: block; margin: 0 auto 20px; padding: 10px 20px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    /* 下部リスト */
+    .zone-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .zone-card {
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+    .reset-btn {
+      display: block;
+      width: 200px;
+      margin: 10px auto;
+      padding: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>廃品回収 状態管理</h1>
-    <div class="sub">地区または文字をタップして更新</div>
-    <div class="summary" id="summary"></div>
-    <div class="legend">
-      <div class="legend-item"><span class="dot" style="background:#bdbdbd;"></span>未着手</div>
-      <div class="legend-item"><span class="dot" style="background:#81d4fa;"></span>開始</div>
-      <div class="legend-item"><span class="dot" style="background:#ffd54f;"></span>担当完了</div>
-      <div class="legend-item"><span class="dot" style="background:#66bb6a;"></span>役員完了</div>
-    </div>
-    <button class="reset-btn" id="resetBtn">リセット</button>
-    
-    <div class="map-area" id="mapArea">
-      <img src="map.png" alt="地図" class="map-image" id="mapImg">
-    </div>
 
-    <div class="list-area">
-      <div class="zone-list" id="zoneList"></div>
-    </div>
+  <div class="wrap">
+    <h1 style="text-align:center;">廃品回収 状態管理</h1>
+    
+    <button class="reset-btn" id="resetBtn">リセット</button>
+
+    <div class="map-area" id="mapArea">
+      <img src="map.png" class="map-image">
+      </div>
+
+    <div class="zone-list" id="zoneList"></div>
   </div>
 
   <script>
@@ -119,97 +106,70 @@
       { name: "9区D", x: 55, y: 25 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 64, y: 35 }
     ];
 
-    const zonePolygons = {
-      "1区": [[50,49],[55,49],[55,52],[59,52],[59,55],[61,54.5],[61,56],[64.8,56],[64.8,56.5],[66,56.5],[67,61],[69,61],[70,65],[71,65],[72,63],[73,64],[73,66],[74,66],[74,66.5],[72,55],[70,54.5],[61,56],[60,56],[58,56.5],[53,65],[52,64],[52,65],[51.5,65],[51.5,59],[51,59],[50.5,52]],
-      "9区A": [[6,1],[25,1],[31,28],[30,36],[8.5,37]],
-      "9区B": [[8.5,37],[30,36],[30,50],[8.5,50]]
-    };
-
     let state = {};
-    const STORAGE_KEY = "haipin_v4";
 
-    function loadState() {
-      const initial = {};
-      zones.forEach(z => initial[z.name] = { status: 0 });
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? Object.assign(initial, JSON.parse(raw)) : initial;
+    // データの読み込み
+    function init() {
+      const saved = localStorage.getItem("haipin_simple");
+      if (saved) {
+        state = JSON.parse(saved);
+      } else {
+        zones.forEach(z => state[z.name] = 0);
+      }
     }
 
-    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-    function nextStatus(name) {
-      state[name].status = (state[name].status + 1) % 4;
-      saveState(); render();
+    function toggle(name) {
+      state[name] = (state[name] + 1) % 4;
+      localStorage.setItem("haipin_simple", JSON.stringify(state));
+      render();
     }
 
     function render() {
       const mapArea = document.getElementById("mapArea");
-      const counts = [0,0,0,0];
-      Object.values(state).forEach(v => counts[v.status]++);
-      document.getElementById("summary").innerHTML = STATUS.map((s,i)=>`<div class="summary-box">${s.label} ${counts[i]}</div>`).join("");
-
-      // SVG描画
-      let svg = document.getElementById("zoneSvg");
-      if(!svg){
-        svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-        svg.id = "zoneSvg"; svg.setAttribute("viewBox","0 0 100 100");
-        svg.setAttribute("preserveAspectRatio","none");
-        mapArea.appendChild(svg);
-      }
-      svg.innerHTML = "";
-      Object.keys(zonePolygons).forEach(name => {
-        const poly = document.createElementNS("http://www.w3.org/2000/svg","polygon");
-        poly.setAttribute("points", zonePolygons[name].map(p=>p.join(",")).join(" "));
-        poly.setAttribute("fill", STATUS[state[name].status].color);
-        poly.setAttribute("fill-opacity", "0.5");
-        poly.setAttribute("stroke", "white"); poly.setAttribute("stroke-width", "0.2");
-        poly.onclick = (e) => { e.stopPropagation(); nextStatus(name); };
-        svg.appendChild(poly);
-      });
-
-      // ボタン描画
-      mapArea.querySelectorAll(".zone-btn").forEach(el => el.remove());
-      zones.forEach(z => {
-        const btn = document.createElement("button");
-        btn.className = "zone-btn";
-        btn.style.left = z.x + "%"; btn.style.top = z.y + "%";
-        btn.innerHTML = `<span class="zone-name">${z.name}</span><span class="zone-status">${STATUS[state[z.name].status].label}</span>`;
-        btn.onclick = (e) => { e.stopPropagation(); nextStatus(z.name); };
-        mapArea.appendChild(btn);
-      });
-
-      // リスト描画
       const list = document.getElementById("zoneList");
+
+      // 既存のボタンを削除（imgタグ以外を消す）
+      const oldBtns = mapArea.querySelectorAll(".zone-btn");
+      oldBtns.forEach(b => b.remove());
+
+      // リストをクリア
       list.innerHTML = "";
+
       zones.forEach(z => {
+        const currentStatus = STATUS[state[z.name]];
+
+        // 地図上のボタン作成
+        const btn = document.createElement("div");
+        btn.className = "zone-btn";
+        btn.style.left = z.x + "%";
+        btn.style.top = z.y + "%";
+        btn.innerHTML = `
+          <div class="zone-name">${z.name}</div>
+          <div class="zone-status">${currentStatus.label}</div>
+        `;
+        btn.onclick = () => toggle(z.name);
+        mapArea.appendChild(btn);
+
+        // 下部リストのカード作成
         const card = document.createElement("div");
-        card.className = "zone-card"; card.style.background = STATUS[state[z.name].status].color;
-        card.innerHTML = `<strong>${z.name}</strong><br>${STATUS[state[z.name].status].label}`;
-        card.onclick = () => nextStatus(z.name);
+        card.className = "zone-card";
+        card.style.background = currentStatus.color;
+        card.innerHTML = `<strong>${z.name}</strong><br>${currentStatus.label}`;
+        card.onclick = () => toggle(z.name);
         list.appendChild(card);
       });
     }
 
-    // 起動処理
-    state = loadState();
-    const mapImg = document.getElementById("mapImg");
-
-    // 画像が読み込み済みかチェックして描画
-    if (mapImg.complete) {
-      render();
-    } else {
-      mapImg.onload = render;
-    }
-
     document.getElementById("resetBtn").onclick = () => {
-      if(confirm("リセットしますか？")){
-        Object.keys(state).forEach(n => state[n].status = 0);
-        saveState(); render();
+      if(confirm("リセット？")) {
+        zones.forEach(z => state[z.name] = 0);
+        render();
       }
     };
-    
-    // スマホ等のブラウザ向けに念のため0.5秒後にもう一度描画
-    setTimeout(render, 500);
+
+    // 実行
+    init();
+    render();
   </script>
 </body>
 </html>
