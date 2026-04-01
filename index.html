@@ -1,231 +1,85 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>廃品回収 状態管理</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>座標取得ツール</title>
   <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 100px; }
-    .container { max-width: 800px; margin: 0 auto; padding: 10px; }
+    body { margin: 0; background: #eee; font-family: sans-serif; }
+    #mapBox { position: relative; width: 100%; max-width: 800px; margin: 0 auto; background: #ccc; cursor: crosshair; }
+    img { width: 100%; height: auto; display: block; pointer-events: none; }
     
-    h1 { text-align: center; font-size: 1.2rem; margin: 10px 0; }
-
-    /* 地図エリア */
-    .map-container {
-      position: relative;
-      width: 100%;
-      background: #ccc;
-      line-height: 0;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    /* 座標表示用の帯（最初から表示） */
+    #debug-panel {
+      position: fixed; bottom: 0; left: 0; width: 100%; 
+      background: rgba(0,0,0,0.9); color: #0f0; 
+      padding: 15px; z-index: 10000; font-family: monospace;
+      border-top: 3px solid #0f0;
     }
-
-    .map-image {
-      width: 100%;
-      height: auto;
-      display: block;
+    #coords-val { 
+      background: #222; color: #fff; padding: 10px; 
+      margin: 10px 0; word-break: break-all; min-height: 40px; border: 1px solid #444;
     }
-
-    /* SVG 色塗りレイヤー */
-    #map-svg {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    /* 文字ラベルレイヤー */
-    .label-layer {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 20;
-      pointer-events: none;
-    }
-
-    .zone-label {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      pointer-events: auto;
-      cursor: pointer;
-    }
-
-    .z-name, .z-status {
-      display: block;
-      color: #000; /* 文字は常に黒 */
-      font-weight: 900;
-      white-space: nowrap;
-      line-height: 1.1;
-      /* 強力な白縁取り */
-      text-shadow: 
-        1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 
-        1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff,
-        0 1.5px 0 #fff, 0 -1.5px 0 #fff,
-        1.5px 0 0 #fff, -1.5px 0 0 #fff;
-    }
-    .z-name { font-size: 0.85rem; }
-    .z-status { font-size: 0.65rem; }
-
-    /* 下部リスト */
-    .list-view {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .card {
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: bold;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      cursor: pointer;
-      color: #000;
-    }
-
-    .btn-reset {
-      display: block;
-      width: 120px;
-      margin: 15px auto;
-      padding: 8px;
-      background: #444;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-    }
+    button { padding: 10px 20px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>廃品回収 状態管理</h1>
-  <button class="btn-reset" onclick="resetProgress()">リセット</button>
+<div id="mapBox">
+  <img src="map.png" id="targetImg">
+</div>
 
-  <div class="map-container" id="mapBox">
-    <img src="map.png" class="map-image" id="baseImg">
-    <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-    <div class="label-layer" id="labelLayer"></div>
-  </div>
-
-  <div class="list-view" id="listView"></div>
+<div id="debug-panel">
+  <strong>【座標取得モード】地図の角をタップしてください</strong>
+  <div id="coords-val">[]</div>
+  <button onclick="copyCoords()">コピー</button>
+  <button onclick="clearCoords()" style="margin-left:10px;">リセット</button>
+  <p style="font-size:10px; color:#aaa; margin-top:5px;">※タップするたびに上の数字が増えます</p>
 </div>
 
 <script>
-  // --- 基本設定 ---
-  const STATUS = [
-    { label: "未着手", color: "#bdbdbd" },
-    { label: "開始", color: "#81d4fa" },
-    { label: "担当完了", color: "#ffd54f" },
-    { label: "役員完了", color: "#66bb6a" }
-  ];
+  var tempPoints = [];
+  var mapBox = document.getElementById("mapBox");
+  var output = document.getElementById("coords-val");
 
-  // 各地区の文字の位置 (x, y は %)
-  const zones = [
-    { name: "1区", x: 60, y: 55 }, { name: "1区A", x: 70, y: 45 }, { name: "1区B", x: 82, y: 42 },
-    { name: "2区", x: 40, y: 60 }, { name: "3区", x: 55, y: 75 }, { name: "4区", x: 60, y: 82 },
-    { name: "5区", x: 55, y: 92 }, { name: "7区", x: 42, y: 95 }, { name: "8区", x: 40, y: 83 },
-    { name: "9区A", x: 18, y: 19 }, { name: "9区B", x: 18, y: 43 }, { name: "9区C", x: 40, y: 10 },
-    { name: "9区D", x: 55, y: 25 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 64, y: 35 }
-  ];
+  // 画面のクリックイベントを直接拾う
+  mapBox.addEventListener("click", function(e) {
+    var rect = mapBox.getBoundingClientRect();
+    
+    // パーセント計算
+    var x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+    var y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
 
-  // エリアの色塗り用座標（ここに取得したデータを貼り付けていく）
-// エリアの色塗り用座標（頂いたデータを整形しました）
-  const polygons = {
-    "1区": [[49.4,49],[54.6,48.4],[55.1,51.6],[58.5,51.6],[64.6,56.6],[71.4,64.5],[71.6,66.3],[72.5,66.2],[72.7,66.9],[69.7,67.2],[70.1,69.9],[66.3,70.3],[66.4,72.6],[64.9,72.7],[64.8,71.5],[63.7,71.7],[63.8,72.7],[62.7,72.7],[62.7,71.8],[61.4,71.8],[61.1,72.6],[60,72.4],[60,71.3],[56.2,70.7],[56.8,68.9],[54.5,68.7],[54.9,65.7],[53.4,65.5],[50.8,59.2],[49.7,49.1]],
-    "1区A": [[45.5,44.4],[69,37.3],[70.7,46.6],[71.4,50.1],[71.2,51.4],[71.7,53.1],[69,53.6],[58.5,51.4],[55.3,51.5],[54.7,48.3],[49,49],[48.3,46],[45.6,46.3],[45.5,44.2]],
-    "1区B": [[69.1,37.3],[86.2,32],[94,37.7],[96.4,44.5],[94.8,50.2],[93,52.7],[91.3,52.2],[90.8,52.9],[92.1,53.2],[87.9,56.6],[82.8,53.7],[83.4,52.6],[78.9,50.5],[78.9,51.9],[80.4,52.4],[80,53.3],[78.6,53.1],[78.1,53.5],[73.3,52.8],[73.7,51.4],[76,51.9],[77.4,49.6],[75.2,48],[73.9,50.3],[71.7,50.2],[69.1,37.4],[78.4,56.1],[80.9,56.1],[81.1,57.2],[78.2,57],[78.4,56.1],[73.9,58],[76.9,58],[77,58.9],[73.9,58.9],[73.7,58]],
-    "2区": [[8.4,50.5],[17,50.9],[24.4,50.3],[42.5,45.2],[42.4,46.6],[41,46.7],[40.7,47.7],[36.7,56.3],[38.8,57.3],[38.3,58.7],[46.7,59],[46.8,61.2],[46.4,59],[50.8,59.1],[50.8,61.4],[30.1,61.6],[31,67.9],[27.4,68.7],[23.6,68.9],[26.5,59.4],[20.6,58.4],[17.2,57.8],[16.8,52.8],[7.7,52.8],[7.9,50.5]],
-    "3区": [[44.3,70],[47.9,70.4],[47.8,71.1],[49.4,71.4],[49.7,70.7],[60,71.4],[59.9,72.5],[61.2,72.7],[61.1,71.8],[62.9,71.8],[62.6,72.7],[63.7,72.8],[63.7,71.9],[64.6,71.8],[65,76.4],[63.6,76.6],[63.4,76.3],[62.1,76.5],[62.1,77.5],[61.7,78.7],[63.1,78.5],[63.3,80.6],[59.5,80.1],[59.1,80.5],[57.8,80.2],[58.3,79.6],[56.4,78.9],[55.4,79.6],[53.2,78.4],[52.3,79.3],[42.5,73.6],[43.7,72],[42.9,71.5],[44.7,69.8]],
-    "4区": [[66.4,70.3],[69.8,70],[70.1,74.8],[66.7,81],[64.4,86.6],[61.7,86],[61.1,86.6],[58.9,85.9],[58.9,84.5],[56.2,83.8],[55.8,85.7],[53.2,85.1],[54.6,81.3],[52.1,79.4],[53.4,78.5],[54.6,78.8],[54.7,79.4],[55.7,79.7],[56.5,78.8],[57,79.1],[56.8,79.5],[58,79.8],[57.7,80.1],[59.1,80.4],[59.3,79.7],[63,80.4],[63.3,78.6],[61.7,78.9],[62.2,77.9],[61.8,76.7],[63.1,76.4],[63.3,76.7],[65.5,76.7],[65.2,72.7],[66.5,72.7],[66.3,70.1]],
-    "5区": [[53.2,85.2],[55.5,85.8],[56.4,83.9],[59.3,84.7],[58.9,85.9],[60.8,86.4],[61.4,85.9],[63.8,86.5],[62.7,93.2],[63.1,99.8],[46.7,98.8],[53.2,85.4]],
-    "7区": [[39.6,92.6],[46.3,92.7],[44,98.6],[38.5,97.5]],
-    "8区": [[30.8,73.1],[42.5,73.5],[54.6,81.3],[49.2,93.4],[47.1,92.1],[30,91.6],[30.4,73.7]],
-    "9区A": [[4.5,0.1],[23.1,0.1],[31,25.9],[29.1,36.4],[7.1,36.9],[4.6,0.2]],
-    "9区B": [[7.1,36.9],[10.9,37.5],[28.6,36.7],[28.5,43],[29.1,48.7],[19.4,50.8],[7.9,50.8],[7.6,37.4]],
-    "9区C": [[23.4,0.2],[39.1,0.5],[44.5,6.7],[56.5,19],[36.4,20],[34.1,23.6],[30,22.3],[23.5,0]],
-    "9区D": [[33.9,23.6],[36.3,20],[52.7,19.1],[56.5,19.1],[61.1,21.8],[66.1,24.4],[65.5,27.7],[57.8,31.5],[53,27.7],[51.9,28],[49.4,25],[41.4,28.2],[36.7,24.6],[34.2,23.7]],
-    "9区E": [[30.1,22.5],[33.5,23.7],[38.8,26.3],[41.6,28.2],[46.8,34.2],[49.6,42.8],[30.7,25],[30,22.6]],
-    "9区F": [[41.7,28.2],[49.6,24.9],[52.1,27.9],[52.8,27.5],[57.8,31.3],[58.7,32.4],[59.8,39.6],[49.8,42.8],[47.5,35],[41.8,28.2]],
-    "9区G": [[58,31.4],[65.2,27.7],[64.6,30.9],[66.7,31.2],[66.5,32.6],[68.2,32.7],[68.6,30.9],[70.6,31.1],[70.5,32.8],[70.3,34.8],[74,33.6],[73.6,32.8],[74.1,31.4],[75.8,31.6],[76,32.9],[76.9,34.6],[60,39.9],[58.7,32.5],[58,31.5]]
+    // 範囲外クリック防止
+    if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+    tempPoints.push([x, y]);
+    
+    // 表示更新
+    output.innerText = JSON.stringify(tempPoints);
+    console.log("追加:", x, y);
+  });
+
+  window.copyCoords = function() {
+    var val = output.innerText;
+    if (val === "[]") {
+      alert("座標がありません。地図をタップしてください。");
+      return;
+    }
+    navigator.clipboard.writeText(val).then(function() {
+      alert("コピー完了！\n" + val);
+    }).catch(function() {
+      alert("コピー失敗。手動で選択してコピーしてください：\n" + val);
+    });
   };
 
-  let state = {};
-  const KEY = "haipin_v7_final";
-
-  // --- 進捗管理ロジック ---
-  function load() {
-    const s = localStorage.getItem(KEY);
-    state = s ? JSON.parse(s) : {};
-    zones.forEach(z => { if(state[z.name] === undefined) state[z.name] = 0; });
-  }
-
-  function toggleStatus(name) {
-    state[name] = (state[name] + 1) % 4;
-    localStorage.setItem(KEY, JSON.stringify(state));
-    render();
-  }
-
-  function resetProgress() {
-    if(confirm("すべての進捗をリセットしますか？")) {
-      zones.forEach(z => state[z.name] = 0);
-      localStorage.setItem(KEY, JSON.stringify(state));
-      render();
+  window.clearCoords = function() {
+    if (confirm("記録を消去しますか？")) {
+      tempPoints = [];
+      output.innerText = "[]";
     }
-  }
+  };
+</script>
 
-  function render() {
-    // 1. 色塗り (SVG)
-    const svg = document.getElementById("map-svg");
-    svg.innerHTML = "";
-    Object.keys(polygons).forEach(name => {
-      const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      p.setAttribute("points", polygons[name].map(pt => pt.join(",")).join(" "));
-      p.setAttribute("fill", STATUS[state[name]].color);
-      p.setAttribute("fill-opacity", "0.6");
-      p.setAttribute("stroke", "#fff");
-      p.setAttribute("stroke-width", "0.2");
-      p.style.pointerEvents = "auto";
-      p.onclick = (e) => { e.stopPropagation(); toggleStatus(name); };
-      svg.appendChild(p);
-    });
-
-    // 2. ラベル (HTML)
-    const layer = document.getElementById("labelLayer");
-    layer.innerHTML = "";
-    zones.forEach(z => {
-      const div = document.createElement("div");
-      div.className = "zone-label";
-      div.style.left = z.x + "%";
-      div.style.top = z.y + "%";
-      div.innerHTML = '<span class="z-name">' + z.name + '</span><span class="z-status">' + STATUS[state[z.name]].label + '</span>';
-      div.onclick = (e) => { e.stopPropagation(); toggleStatus(z.name); };
-      layer.appendChild(div);
-    });
-
-    // 3. 一覧リスト
-    const lv = document.getElementById("listView");
-    lv.innerHTML = "";
-    zones.forEach(z => {
-      const c = document.createElement("div");
-      c.className = "card";
-      c.style.background = STATUS[state[z.name]].color;
-      c.innerHTML = z.name + '<br><small>' + STATUS[state[z.name]].label + '</small>';
-      c.onclick = () => toggleStatus(z.name);
-      lv.appendChild(c);
-    });
-  }
-
-  // --- 起動処理 ---
-  load();
-  const img = document.getElementById("baseImg");
-  img.onload = render;
-  if (img.complete) render();
-  window.onload = render;
-  setTimeout(render, 500);
-
-  </script>
 </body>
 </html>
