@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>廃品回収 状態管理</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Yu Gothic", "Meiryo", sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 10px;
+      text-align: center;
+    }
+
+    .sub {
+      text-align: center;
+      color: #666;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      justify-content: center;
+    }
+
+    .summary-box {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-weight: bold;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .reset-btn {
+      border: none;
+      background: #333;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .map-area {
+      position: relative;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 18px;
+    }
+
+    .map-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .zone-btn {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  
+  width: 52px;
+  height: 52px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;   /* ←ここ重要 */
+
+  box-shadow: none;          /* ←影消す */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  color: #222;
+}
+
+    .zone-btn:active {
+      transform: translate(-50%, -50%) scale(0.97);
+    }
+
+.zone-name {
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-shadow: 0 0 4px white;
+}
+
+.zone-status {
+  font-size: 0.65rem;
+  text-shadow: 0 0 4px white;
+}
+
+    .list-area {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .list-title {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+
+    .zone-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .zone-card {
+      border-radius: 14px;
+      padding: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-weight: bold;
+      text-align: center;
+      transition: transform 0.12s ease;
+      min-height: 120px;
+    }
+
+    .zone-card:active {
+      transform: scale(0.95);
+    }
+
+    .zone-card .name {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .zone-card .status {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .times {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      font-weight: normal;
+      color: #333;
+    }
+
+    @media (max-width: 700px) {
+      .zone-list {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>廃品回収 状態管理</h1>
+    <div class="sub">区をタップすると　未着手 → 開始 → 担当完了 → 役員完了　の順で切り替わります</div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:#bdbdbd;"></span>未着手</div>
+      <div class="legend-item"><span class="dot" style="background:#81d4fa;"></span>開始</div>
+      <div class="legend-item"><span class="dot" style="background:#ffd54f;"></span>担当完了</div>
+      <div class="legend-item"><span class="dot" style="background:#66bb6a;"></span>役員完了</div>
+    </div>
+
+    <div class="controls">
+      <button class="reset-btn" id="resetBtn">全て未着手に戻す</button>
+    </div>
+
+    <div class="map-area" id="mapArea">
+      <img src="map.png" alt="回収エリア地図" class="map-image">
+    </div>
+
+    <div class="list-area">
+      <h2 class="list-title">一覧からも変更できます</h2>
+      <div class="zone-list" id="zoneList"></div>
+    </div>
+  </div>
+
+  <script>
+    const STATUS = [
+      { label: "未着手", color: "#bdbdbd" },
+      { label: "開始", color: "#81d4fa" },
+      { label: "担当完了", color: "#ffd54f" },
+      { label: "役員完了", color: "#66bb6a" }
+    ];
+
+    const zones = [
+  { name: "1区",  x: 60, y: 40 },
+  { name: "1区A", x: 60, y: 45 },
+  { name: "1区B", x: 82, y: 42 },
+
+  { name: "2区",  x: 40, y: 60 },
+  { name: "3区",  x: 55, y: 75 },
+  { name: "4区",  x: 60, y: 82 },
+  { name: "5区",  x: 55, y: 92 },
+  { name: "7区",  x: 42, y: 95 },
+  { name: "8区",  x: 40, y: 83 },
+
+  { name: "9区A", x: 18, y: 19 },
+  { name: "9区B", x: 18, y: 43 },
+  { name: "9区C", x: 40, y: 10 },
+  { name: "9区D", x: 55, y: 25 },
+  { name: "9区E", x: 38, y: 35 },
+  { name: "9区F", x: 52, y: 33 },
+  { name: "9区G", x: 64, y: 35 }
+];    
+
+
+
+    const zonePolygons = {
+      "1区": [
+        [50, 49],
+        [55, 49],
+        [55, 52],
+        [59, 52],
+        [59, 55],
+        [61, 54.5],
+        [61, 56],
+        [64.8, 56],
+        [64.8, 56.5],
+        [66, 56.5],
+        [67, 61],
+        [69, 61],
+        [70, 65],
+        [71, 65],
+        [72, 63],
+        [73, 64],
+        [73, 66],
+        [74, 66],
+        [74, 66.5],
+        [74, 66.5],
+        [72, 55],
+        [70, 54.5],
+        [61, 56],
+        [60, 56],
+        [58, 56.5],
+        [53, 65],
+        [52, 64],
+        [52, 65],
+        [51.5, 65],
+        [51.5, 59],
+        [51, 59],
+        [50.5, 52],
+      ],
+
+ 　 "9区A": [
+ 　   [6, 1],
+   　 [25, 1],
+    　[31, 28],
+ 　   [30, 36],
+ 　   [8.5, 37]
+ 　 ],
+
+ 　 "9区B": [
+  　  [8.5, 37],
+   　 [30, 36],
+   　 [30, 50],
+   　 [8.5, 50]
+ 　 ]
+　};
+
+
+    const STORAGE_KEY = "haipin_status_map_v3";
+
+    function formatTime(date = new Date()) {
+      const h = String(date.getHours()).padStart(2, "0");
+      const m = String(date.getMinutes()).padStart(2, "0");
+      return `${h}:${m}`;
+    }
+
+    function createInitialState() {
+      const initial = {};
+      zones.forEach(z => {
+        initial[z.name] = {
+          status: 0,
+          startTime: "",
+          staffDoneTime: "",
+          officerDoneTime: ""
+        };
+      });
+      return initial;
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          const merged = createInitialState();
+
+          zones.forEach(z => {
+            if (parsed[z.name]) {
+              merged[z.name] = {
+                status: parsed[z.name].status ?? 0,
+                startTime: parsed[z.name].startTime ?? "",
+                staffDoneTime: parsed[z.name].staffDoneTime ?? "",
+                officerDoneTime: parsed[z.name].officerDoneTime ?? ""
+              };
+            }
+          });
+
+          return merged;
+        } catch (e) {}
+      }
+      return createInitialState();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function nextStatus(name) {
+      const zone = state[name];
+      const now = formatTime();
+
+      if (zone.status === 0) {
+        zone.status = 1;
+        if (!zone.startTime) zone.startTime = now;
+      } else if (zone.status === 1) {
+        zone.status = 2;
+        if (!zone.staffDoneTime) zone.staffDoneTime = now;
+      } else if (zone.status === 2) {
+        zone.status = 3;
+        if (!zone.officerDoneTime) zone.officerDoneTime = now;
+      } else {
+        zone.status = 0;
+        zone.startTime = "";
+        zone.staffDoneTime = "";
+        zone.officerDoneTime = "";
+      }
+
+      saveState();
+      render();
+    }
+
+    function resetAll() {
+      Object.keys(state).forEach(name => {
+        state[name] = {
+          status: 0,
+          startTime: "",
+          staffDoneTime: "",
+          officerDoneTime: ""
+        };
+      });
+      saveState();
+      render();
+    }
+
+    function renderSummary() {
+      const summary = document.getElementById("summary");
+      const counts = [0, 0, 0, 0];
+
+      Object.values(state).forEach(v => counts[v.status]++);
+
+      summary.innerHTML = `
+        <div class="summary-box">未着手 ${counts[0]}</div>
+        <div class="summary-box">開始 ${counts[1]}</div>
+        <div class="summary-box">担当完了 ${counts[2]}</div>
+        <div class="summary-box">役員完了 ${counts[3]}</div>
+      `;
+    }
+
+    function renderMapPolygons() {
+      const mapArea = document.getElementById("mapArea");
+
+      const oldSvg = document.getElementById("zoneSvg");
+      if (oldSvg) oldSvg.remove();
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("id", "zoneSvg");
+      svg.setAttribute("viewBox", "0 0 100 100");
+      svg.setAttribute("preserveAspectRatio", "none");
+      svg.style.position = "absolute";
+      svg.style.left = "0";
+      svg.style.top = "0";
+      svg.style.width = "100%";
+      svg.style.height = "100%";
+
+      Object.keys(zonePolygons).forEach(zoneName => {
+        const zoneState = state[zoneName];
+        const status = STATUS[zoneState.status];
+
+        const polygon = document.createElementNS(svgNS, "polygon");
+        const points = zonePolygons[zoneName]
+          .map(([x, y]) => `${x},${y}`)
+          .join(" ");
+
+        polygon.setAttribute("points", points);
+        polygon.setAttribute("fill", status.color);
+        polygon.setAttribute("fill-opacity", "0.28");
+        polygon.setAttribute("stroke", status.color);
+        polygon.setAttribute("stroke-width", "0.6");
+        polygon.style.pointerEvents = "auto";
+        polygon.style.cursor = "pointer";
+
+        polygon.addEventListener("click", () => nextStatus(zoneName));
+
+        svg.appendChild(polygon);
+      });
+
+      mapArea.appendChild(svg);
+    }
+
+    function renderMapButtons() {
+      const mapArea = document.getElementById("mapArea");
+      mapArea.querySelectorAll(".zone-btn").forEach(el => el.remove());
+
+      zones.forEach(zone => {
+        const zoneState = state[zone.name];
+        const status = STATUS[zoneState.status];
+
+        const btn = document.createElement("button");
+        btn.className = "zone-btn";
+        btn.style.left = zone.x + "%";
+        btn.style.top = zone.y + "%";
+ btn.style.background = "transparent";
+        btn.innerHTML = `
+          <span class="zone-name">${zone.name}</span>
+          <span class="zone-status">${status.label}</span>
+        `;
+        btn.addEventListener("click", () => nextStatus(zone.name));
+        mapArea.appendChild(btn);
+      });
+    }
+
+    function renderList() {
+      const zoneList = document.getElementById("zoneList");
+      zoneList.innerHTML = "";
+
+      zones.forEach(zone => {
+        const zoneState = state[zone.name];
+        const status = STATUS[zoneState.status];
+
+        const card = document.createElement("div");
+        card.className = "zone-card";
+        card.style.background = status.color;
+        card.innerHTML = `
+          <div class="name">${zone.name}</div>
+          <div class="status">${status.label}</div>
+          <div class="times">
+            開始：${zoneState.startTime || "-"}<br>
+            担当完了：${zoneState.staffDoneTime || "-"}<br>
+            役員完了：${zoneState.officerDoneTime || "-"}
+          </div>
+        `;
+        card.addEventListener("click", () => nextStatus(zone.name));
+        zoneList.appendChild(card);
+      });
+    }
+
+    function render() {
+      renderSummary();
+      renderMapPolygons();
+      renderMapButtons();
+      renderList();
+    }
+
+    const state = loadState();
+
+    document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+    render();
+  </script>
+</body>
+</html>
