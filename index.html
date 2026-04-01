@@ -169,26 +169,28 @@
       transform: translate(-50%, -50%) scale(0.95);
     }
 
-   .zone-name {
-  font-size: 0.85rem;
-  font-weight: 900; /* 極太にする */
-  color: #000;      /* 文字は真っ黒 */
-  line-height: 1.2;
-  
-  /* ▼ 3. 文字自体に白縁をつけて、背景に紛れないようにする */
+/* ゾーン名とステータス共通の文字装飾 */
+.zone-name, .zone-status {
+  font-weight: 900;
+  line-height: 1.1;
+  /* 上下左右に白い縁取りをつける */
   text-shadow: 
-    2px 2px 0 #fff, -2px -2px 0 #fff,
-    2px -2px 0 #fff, -2px 2px 0 #fff,
-    0 2px 0 #fff, 0 -2px 0 #fff,
-    2px 0 0 #fff, -2px 0 0 #fff;
+    1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff,
+    1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff,
+    0 1.5px 0 #fff, 0 -1.5px 0 #fff,
+    1.5px 0 0 #fff, -1.5px 0 0 #fff;
 }
 
-  .zone-status {
-  font-size: 0.65rem;
-  font-weight: bold;
-  /* ステータスの色はJavaScript側でつくのでここでは指定なし */
+.zone-name {
+  font-size: 0.85rem;
+  color: #000; /* 地区名は常に黒 */
+  margin-bottom: 2px;
 }
 
+.zone-status {
+  font-size: 0.7rem;
+  /* 色はJSで指定されます */
+}
     .list-area {
       background: white;
       border-radius: 16px;
