@@ -99,7 +99,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       margin-bottom: 18px;
       line-height: 0;
-      /* 選択防止 */
       user-select: none;
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -129,12 +128,12 @@
       cursor: pointer;
     }
 
-    /* 地図上の文字（ボタン） */
+    /* 地図上の文字 */
     .zone-btn {
       position: absolute;
       transform: translate(-50%, -50%);
       border: none;
-      background: transparent; /* 背景は完全に透明 */
+      background: transparent;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -144,13 +143,13 @@
       padding: 0;
     }
 
-    /* 文字の縁取りを共通化して読みやすく */
+    /* 文字は常に黒、白い縁取りで視認性確保 */
     .zone-name, .zone-status {
+      color: #000; /* 常に黒 */
       font-weight: 900;
       line-height: 1.1;
       text-align: center;
       white-space: nowrap;
-      /* どんな背景でも読めるように白い縁取りをつける */
       text-shadow: 
         1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff,
         1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff,
@@ -158,15 +157,8 @@
         1.5px 0 0 #fff, -1.5px 0 0 #fff;
     }
 
-    .zone-name {
-      font-size: 0.9rem;
-      color: #000;
-      margin-bottom: 1px;
-    }
-
-    .zone-status {
-      font-size: 0.75rem;
-    }
+    .zone-name { font-size: 0.9rem; margin-bottom: 1px; }
+    .zone-status { font-size: 0.75rem; }
 
     /* 下部リスト */
     .list-area {
@@ -188,6 +180,7 @@
       cursor: pointer;
       text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      color: #000;
     }
 
     @media (max-width: 600px) {
@@ -218,17 +211,17 @@
     </div>
 
     <div class="list-area">
-      <h2 style="font-size:1.1rem; margin-bottom:12px;">一覧</h2>
+      <h2 style="font-size:1.1rem; margin-bottom:12px;">一覧からも変更可能</h2>
       <div class="zone-list" id="zoneList"></div>
     </div>
   </div>
 
   <script>
     const STATUS = [
-      { label: "未着手", color: "#bdbdbd", text: "#666" },
-      { label: "開始", color: "#81d4fa", text: "#0288d1" },
-      { label: "担当完了", color: "#ffd54f", text: "#f57c00" },
-      { label: "役員完了", color: "#66bb6a", text: "#2e7d32" }
+      { label: "未着手", color: "#bdbdbd" },
+      { label: "開始", color: "#81d4fa" },
+      { label: "担当完了", color: "#ffd54f" },
+      { label: "役員完了", color: "#66bb6a" }
     ];
 
     const zones = [
@@ -292,7 +285,7 @@
       Object.values(state).forEach(v => counts[v.status]++);
       document.getElementById("summary").innerHTML = STATUS.map((s, i) => `<div class="summary-box">${s.label} ${counts[i]}</div>`).join("");
 
-      // SVG
+      // SVG描画
       let svg = document.getElementById("zoneSvg");
       if (!svg) {
         svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -313,39 +306,7 @@
         svg.appendChild(poly);
       });
 
-      // ボタン（文字のみ）
+      // ボタン（文字は常に黒）
       mapArea.querySelectorAll(".zone-btn").forEach(el => el.remove());
       zones.forEach(z => {
-        const s = state[z.name];
-        const btn = document.createElement("button");
-        btn.className = "zone-btn";
-        btn.style.left = z.x + "%";
-        btn.style.top = z.y + "%";
-        btn.innerHTML = `
-          <span class="zone-name">${z.name}</span>
-          <span class="zone-status" style="color:${STATUS[s.status].text}">${STATUS[s.status].label}</span>
-        `;
-        btn.onclick = (e) => { e.stopPropagation(); nextStatus(z.name); };
-        mapArea.appendChild(btn);
-      });
-
-      // リスト
-      const list = document.getElementById("zoneList");
-      list.innerHTML = "";
-      zones.forEach(z => {
-        const s = state[z.name];
-        const card = document.createElement("div");
-        card.className = "zone-card";
-        card.style.background = STATUS[s.status].color;
-        card.innerHTML = `<strong>${z.name}</strong><br><small>${STATUS[s.status].label}</small>`;
-        card.onclick = () => nextStatus(z.name);
-        list.appendChild(card);
-      });
-    }
-
-    state = loadState();
-    document.getElementById("resetBtn").onclick = () => { if(confirm("リセットしますか？")) { Object.keys(state).forEach(n => state[n]={status:0,startTime:"",staffDoneTime:"",officerDoneTime:""}); saveState(); render(); } };
-    render();
-  </script>
-</body>
-</html>
+        const s =
