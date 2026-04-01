@@ -60,7 +60,13 @@
   <div class="list-view" id="listView"></div>
 </div>
 
-<script>
+  <script>
+  // ★ここにコピーしたURLを貼り付けてください★
+  const APP_URL = "https://script.google.com/macros/s/AKfycbxPCvjJdKI0NArn6Ne-QUzuHo8qx-gg-QXPsVMdRhSNMvI2NSEk2U0zTZQEqYrKwbdF/exec";
+  
+  
+  
+  
   const STATUS = [
     { label: "未着手", color: "#bdbdbd" },
     { label: "開始", color: "#81d4fa" },
@@ -96,15 +102,27 @@
     "9区G": [[58,31.4],[65.2,27.7],[64.6,30.9],[66.7,31.2],[66.5,32.6],[68.2,32.7],[68.6,30.9],[70.6,31.1],[70.5,32.8],[70.3,34.8],[74,33.6],[73.6,32.8],[74.1,31.4],[75.8,31.6],[76,32.9],[76.9,34.6],[60,39.9],[58.7,32.5],[58,31.5]]
   };
 
- let state = {};
-  const KEY = "haipin_v9_time";
+// スプレッドシートからデータを読み込む
+  async function loadFromSheet() {
+    document.getElementById("msg").innerText = "同期中...";
+    try {
+      const res = await fetch(APP_URL);
+      state = await res.json();
+      render();
+      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
+    } catch (e) {
+      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
+    }
+  }
 
-  function load() {
-    const s = localStorage.getItem(KEY);
-    state = s ? JSON.parse(s) : {};
-    zones.forEach(z => { 
-      if(!state[z.name]) state[z.name] = { status: 0, start: "", end: "" }; 
+  // スプレッドシートへデータを送る
+  async function saveToSheet(name, data) {
+    document.getElementById("msg").innerText = "保存中...";
+    await fetch(APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ name: name, ...data })
     });
+    document.getElementById("msg").innerText = "保存完了";
   }
 
   function getCurrentTime() {
@@ -112,25 +130,18 @@
     return now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
   }
 
-  function toggleStatus(name) {
+  async function toggleStatus(name) {
     let z = state[name];
+    if(!z) z = { status: 0, start: "", end: "" };
+    
     z.status = (z.status + 1) % 4;
+    if (z.status === 0) { z.start = ""; z.end = ""; }
+    else if (z.status === 1) { z.start = getCurrentTime(); }
+    else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); }
     
-    // 時刻の自動記録
-    if (z.status === 0) { z.start = ""; z.end = ""; } // 未着手
-    else if (z.status === 1) { z.start = getCurrentTime(); } // 開始
-    else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); } // 完了
-    
-    localStorage.setItem(KEY, JSON.stringify(state));
-    render();
-  }
-
-  function resetProgress() {
-    if(confirm("すべてリセットしますか？")) {
-      zones.forEach(z => state[z.name] = { status: 0, start: "", end: "" });
-      localStorage.setItem(KEY, JSON.stringify(state));
-      render();
-    }
+    state[name] = z;
+    render(); // 先に画面を変える（体感速度アップ）
+    await saveToSheet(name, z); // 裏でスプレッドシート保存
   }
 
   function render() {
@@ -138,12 +149,12 @@
     svg.innerHTML = "";
     Object.keys(polygons).forEach(name => {
       const data = polygons[name];
-      const statusIdx = state[name].status;
+      const z = state[name] || { status: 0 };
       const islandList = (Array.isArray(data[0][0])) ? data : [data];
       islandList.forEach(points => {
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
-        p.setAttribute("fill", STATUS[statusIdx].color);
+        p.setAttribute("fill", STATUS[z.status].color);
         p.setAttribute("fill-opacity", "0.6");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.2");
@@ -156,11 +167,12 @@
     const layer = document.getElementById("labelLayer");
     layer.innerHTML = "";
     zones.forEach(z => {
+      const s = state[z.name] || { status: 0 };
       const div = document.createElement("div");
       div.className = "zone-label";
       div.style.left = z.x + "%";
       div.style.top = z.y + "%";
-      div.innerHTML = `<span class="z-name">${z.name}</span><span class="z-status">${STATUS[state[z.name].status].label}</span>`;
+      div.innerHTML = `<span class="z-name">${z.name}</span><span class="z-status">${STATUS[s.status].label}</span>`;
       div.onclick = (e) => { e.stopPropagation(); toggleStatus(z.name); };
       layer.appendChild(div);
     });
@@ -168,25 +180,20 @@
     const lv = document.getElementById("listView");
     lv.innerHTML = "";
     zones.forEach(z => {
-      const s = state[z.name];
+      const s = state[z.name] || { status: 0, start: "", end: "" };
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = STATUS[s.status].color;
       c.innerHTML = `
-        <div class="card-title">${z.name} (${STATUS[s.status].label})</div>
-        <div class="card-time">
-          開始：${s.start || '--:--'}<br>
-          完了：${s.end || '--:--'}
-        </div>
+        <div class="card-title">${z.name}</div>
+        <div class="card-time">開始 ${s.start || '--:--'}<br>完了 ${s.end || '--:--'}</div>
       `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
   }
 
-  load();
-  window.onload = render;
-  setTimeout(render, 500);
+  window.onload = loadFromSheet;
 </script>
 </body>
 </html>
