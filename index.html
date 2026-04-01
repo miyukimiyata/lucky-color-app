@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>廃品回収 状態管理（時刻記録版）</title>
+  <title>廃品回収 リアルタイム共有地図</title>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { 
-      margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 120px; overflow-x: auto; 
-    }
+    body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 120px; overflow-x: auto; }
     .container { max-width: 100%; margin: 0 auto; padding: 10px; }
-    h1 { text-align: center; font-size: 1.2rem; margin: 10px 0; }
+    h1 { text-align: center; font-size: 1.1rem; margin: 5px 0; }
+    .loading-notice { text-align: center; font-size: 0.8rem; color: #666; margin-bottom: 5px; }
 
     .map-container {
       position: relative; width: 100%; background: #ccc; line-height: 0;
@@ -21,38 +20,34 @@
     #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
     .label-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
     
-    /* 地図上のラベル（極めてシンプルに） */
-    .zone-label {
-      position: absolute; transform: translate(-50%, -50%); text-align: center;
-      pointer-events: auto; cursor: pointer;
-    }
+    .zone-label { position: absolute; transform: translate(-50%, -50%); text-align: center; pointer-events: auto; cursor: pointer; }
     .z-name, .z-status {
       display: block; color: #000; font-weight: bold; white-space: nowrap; line-height: 1.1;
-      text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff; /* 最小限の縁取り */
+      text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff;
     }
     .z-name { font-size: 0.85rem; }
-    .z-status { font-size: 0.65rem; }
+    .z-status { font-size: 0.6rem; }
 
-    /* 下のカード（時刻表示用） */
     .list-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 20px; }
-    .card { 
-      padding: 10px; border-radius: 8px; text-align: left; /* 左寄せに変更 */
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000;
-    }
-    .card-title { font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 4px; }
-    .card-time { font-size: 0.75rem; line-height: 1.4; }
+    .card { padding: 10px; border-radius: 8px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000; }
+    .card-title { font-weight: bold; font-size: 0.85rem; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 4px; }
+    .card-time { font-size: 0.7rem; line-height: 1.4; opacity: 0.8; }
     
-    .btn-reset { display: block; width: 120px; margin: 15px auto; padding: 8px; background: #444; color: white; border: none; border-radius: 5px; font-weight: bold; }
+    .controls { text-align: center; margin: 10px 0; }
+    .btn-refresh { padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 20px; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>廃品回収 状態管理</h1>
-  <button class="btn-reset" onclick="resetProgress()">リセット</button>
+  <h1>廃品回収 共有管理</h1>
+  <div class="loading-notice" id="msg">データ読み込み中...</div>
+  <div class="controls">
+    <button class="btn-refresh" onclick="loadFromSheet()">最新に更新</button>
+  </div>
 
   <div class="map-container" id="mapBox">
-    <img src="map.png" class="map-image" id="baseImg">
+    <img src="map.png" class="map-image">
     <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
     <div class="label-layer" id="labelLayer"></div>
   </div>
@@ -61,6 +56,9 @@
 </div>
 
 <script>
+  // ★ここにコピーしたURLを貼り付けてください★
+  const APP_URL = "ここにURLを貼る"; 
+
   const STATUS = [
     { label: "未着手", color: "#bdbdbd" },
     { label: "開始", color: "#81d4fa" },
@@ -69,14 +67,13 @@
   ];
 
   const zones = [
-    { name: "1区", x: 60, y: 65 }, { name: "1区A", x: 60, y: 45 }, { name: "1区B", x: 82, y: 45 },
-    { name: "2区", x: 35, y: 65 }, { name: "3区", x: 55, y: 75 }, { name: "4区", x:60, y: 81 },
+    { name: "1区", x: 60, y: 65 }, { name: "1区A", x: 60, y: 50 }, { name: "1区B", x: 82, y: 45 },
+    { name: "2区", x: 40, y: 60 }, { name: "3区", x: 55, y: 75 }, { name: "4区", x: 61, y: 81 },
     { name: "5区", x: 55, y: 92 }, { name: "7区", x: 42, y: 95 }, { name: "8区", x: 40, y: 83 },
     { name: "9区A", x: 18, y: 19 }, { name: "9区B", x: 18, y: 43 }, { name: "9区C", x: 40, y: 10 },
-    { name: "9区D", x: 50, y: 22 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 67, y: 34 }
+    { name: "9区D", x: 50, y: 25 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 67, y: 34 }
   ];
 
-  // 送信いただいた最新座標
   const polygons = {
     "1区": [[49.6,49.1],[54.9,48.6],[55.1,51.6],[58.6,51.5],[58.9,55.1],[60.8,54.7],[60.7,55.7],[64.8,55.7],[64.5,56.7],[66.3,56.5],[67.6,60.8],[69.6,60.7],[70.5,64.7],[71.4,64.6],[71.7,66.4],[72.6,66.6],[72.6,67.1],[70.1,67.2],[70.2,70],[66.4,70.2],[66.7,72.8],[64.6,73],[64.8,71.9],[63.7,72],[64,73.1],[63,73.2],[62.8,72],[61.1,72.2],[61.1,72.8],[59.9,72.8],[60.2,71.6],[56.7,71.2],[56.9,68.8],[54.5,68.5],[54.8,65.8],[53.3,65.7],[53.3,64.4],[51.6,64.4],[52.2,59.1],[51.3,59.1],[49.8,49.1]],
     "1区A": [[45.1,44.2],[69,37.3],[71.4,50.3],[71,51.3],[71.7,53.2],[68.9,53.7],[70.1,55.8],[68.4,56.1],[68.3,55.6],[66.1,55.6],[66.4,56.5],[64.8,56.5],[64.8,55.7],[60.5,55.6],[60.8,54.5],[59.2,55.2],[58.6,51.5],[55.1,51.8],[54.6,48.7],[49,49.3],[48.3,46.1],[46.2,46.7],[45.1,44.2]],
@@ -96,15 +93,29 @@
     "9区G": [[58,31.4],[65.2,27.7],[64.6,30.9],[66.7,31.2],[66.5,32.6],[68.2,32.7],[68.6,30.9],[70.6,31.1],[70.5,32.8],[70.3,34.8],[74,33.6],[73.6,32.8],[74.1,31.4],[75.8,31.6],[76,32.9],[76.9,34.6],[60,39.9],[58.7,32.5],[58,31.5]]
   };
 
- let state = {};
-  const KEY = "haipin_v9_time";
+  let state = {};
 
-  function load() {
-    const s = localStorage.getItem(KEY);
-    state = s ? JSON.parse(s) : {};
-    zones.forEach(z => { 
-      if(!state[z.name]) state[z.name] = { status: 0, start: "", end: "" }; 
+  // スプレッドシートからデータを読み込む
+  async function loadFromSheet() {
+    document.getElementById("msg").innerText = "同期中...";
+    try {
+      const res = await fetch(APP_URL);
+      state = await res.json();
+      render();
+      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
+    } catch (e) {
+      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
+    }
+  }
+
+  // スプレッドシートへデータを送る
+  async function saveToSheet(name, data) {
+    document.getElementById("msg").innerText = "保存中...";
+    await fetch(APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ name: name, ...data })
     });
+    document.getElementById("msg").innerText = "保存完了";
   }
 
   function getCurrentTime() {
@@ -112,25 +123,18 @@
     return now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
   }
 
-  function toggleStatus(name) {
+  async function toggleStatus(name) {
     let z = state[name];
+    if(!z) z = { status: 0, start: "", end: "" };
+    
     z.status = (z.status + 1) % 4;
+    if (z.status === 0) { z.start = ""; z.end = ""; }
+    else if (z.status === 1) { z.start = getCurrentTime(); }
+    else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); }
     
-    // 時刻の自動記録
-    if (z.status === 0) { z.start = ""; z.end = ""; } // 未着手
-    else if (z.status === 1) { z.start = getCurrentTime(); } // 開始
-    else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); } // 完了
-    
-    localStorage.setItem(KEY, JSON.stringify(state));
-    render();
-  }
-
-  function resetProgress() {
-    if(confirm("すべてリセットしますか？")) {
-      zones.forEach(z => state[z.name] = { status: 0, start: "", end: "" });
-      localStorage.setItem(KEY, JSON.stringify(state));
-      render();
-    }
+    state[name] = z;
+    render(); // 先に画面を変える（体感速度アップ）
+    await saveToSheet(name, z); // 裏でスプレッドシート保存
   }
 
   function render() {
@@ -138,15 +142,15 @@
     svg.innerHTML = "";
     Object.keys(polygons).forEach(name => {
       const data = polygons[name];
-      const statusIdx = state[name].status;
+      const z = state[name] || { status: 0 };
       const islandList = (Array.isArray(data[0][0])) ? data : [data];
       islandList.forEach(points => {
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
-        p.setAttribute("fill", STATUS[statusIdx].color);
+        p.setAttribute("fill", STATUS[z.status].color);
         p.setAttribute("fill-opacity", "0.6");
         p.setAttribute("stroke", "#fff");
-        p.setAttribute("stroke-width", "0.2"                    );
+        p.setAttribute("stroke-width", "0.2");
         p.style.pointerEvents = "auto";
         p.onclick = (e) => { e.stopPropagation(); toggleStatus(name); };
         svg.appendChild(p);
@@ -156,11 +160,12 @@
     const layer = document.getElementById("labelLayer");
     layer.innerHTML = "";
     zones.forEach(z => {
+      const s = state[z.name] || { status: 0 };
       const div = document.createElement("div");
       div.className = "zone-label";
       div.style.left = z.x + "%";
       div.style.top = z.y + "%";
-      div.innerHTML = `<span class="z-name">${z.name}</span><span class="z-status">${STATUS[state[z.name].status].label}</span>`;
+      div.innerHTML = `<span class="z-name">${z.name}</span><span class="z-status">${STATUS[s.status].label}</span>`;
       div.onclick = (e) => { e.stopPropagation(); toggleStatus(z.name); };
       layer.appendChild(div);
     });
@@ -168,25 +173,20 @@
     const lv = document.getElementById("listView");
     lv.innerHTML = "";
     zones.forEach(z => {
-      const s = state[z.name];
+      const s = state[z.name] || { status: 0, start: "", end: "" };
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = STATUS[s.status].color;
       c.innerHTML = `
-        <div class="card-title">${z.name} (${STATUS[s.status].label})</div>
-        <div class="card-time">
-          開始：${s.start || '--:--'}<br>
-          完了：${s.end || '--:--'}
-        </div>
+        <div class="card-title">${z.name}</div>
+        <div class="card-time">開始 ${s.start || '--:--'}<br>完了 ${s.end || '--:--'}</div>
       `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
   }
 
-  load();
-  window.onload = render;
-  setTimeout(render, 500);
+  window.onload = loadFromSheet;
 </script>
 </body>
 </html>
