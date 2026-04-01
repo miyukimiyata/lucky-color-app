@@ -103,6 +103,10 @@
       margin-bottom: 18px;
       /* 地図の比率を維持するための設定（画像に合わせて調整可） */
       line-height: 0;
+/* ▼ここを追加：地図エリアでのテキスト選択を禁止する */
+  user-select: none;
+  -webkit-user-select: none; /* Safari用 */
+  -webkit-tap-highlight-color: transparent; /* タップ時の青い影を消す */
     }
 
     .map-image {
@@ -148,6 +152,9 @@
       z-index: 3; /* 一番上に配置 */
       padding: 4px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+/* ▼ここを追加：ボタン連打による選択を防ぐ */
+  user-select: none;
+  -webkit-user-select: none;
     }
 
     .zone-btn:active {
