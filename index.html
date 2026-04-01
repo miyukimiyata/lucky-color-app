@@ -20,11 +20,7 @@
       padding: 16px;
     }
 
-    h1 {
-      font-size: 1.6rem;
-      margin: 0 0 10px;
-      text-align: center;
-    }
+    h1 { font-size: 1.6rem; margin: 0 0 10px; text-align: center; }
 
     .sub {
       text-align: center;
@@ -93,6 +89,7 @@
       font-weight: bold;
     }
 
+    /* 地図エリア */
     .map-area {
       position: relative;
       width: 100%;
@@ -101,12 +98,11 @@
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       margin-bottom: 18px;
-      /* 地図の比率を維持するための設定（画像に合わせて調整可） */
       line-height: 0;
-/* ▼ここを追加：地図エリアでのテキスト選択を禁止する */
-  user-select: none;
-  -webkit-user-select: none; /* Safari用 */
-  -webkit-tap-highlight-color: transparent; /* タップ時の青い影を消す */
+      /* 選択防止 */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .map-image {
@@ -117,7 +113,7 @@
       z-index: 1;
     }
 
-    /* SVGレイヤー（色塗り） */
+    /* SVG（色塗りレイヤー） */
     #zoneSvg {
       position: absolute;
       top: 0;
@@ -125,82 +121,59 @@
       width: 100%;
       height: 100%;
       z-index: 2;
-      pointer-events: none; /* 下の要素（ボタン）も触れるようにする */
+      pointer-events: none;
     }
 
-    /* ポリゴン自体はクリック可能にする */
     #zoneSvg polygon {
       pointer-events: auto;
       cursor: pointer;
-      transition: fill 0.2s;
     }
 
-  .zone-btn {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  
-  /* ボタンのサイズ感 */
-  min-width: 54px;
-  padding: 4px 6px;
-
-  border: none;
-  border-radius: 6px;
-
-  /* ▼ 1. 背景を少し濃い目の半透明白にする（地図の線を隠す） */
-  background: rgba(255, 255, 255, 0.85); 
-  
-  /* ▼ 2. 軽い影をつけて浮かび上がらせる */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  
-  /* 連打「青くなる現象」対策 */
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-    .zone-btn:active {
-      transform: translate(-50%, -50%) scale(0.95);
+    /* 地図上の文字（ボタン） */
+    .zone-btn {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      border: none;
+      background: transparent; /* 背景は完全に透明 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      padding: 0;
     }
 
-/* ゾーン名とステータス共通の文字装飾 */
-.zone-name, .zone-status {
-  font-weight: 900;
-  line-height: 1.1;
-  /* 上下左右に白い縁取りをつける */
-  text-shadow: 
-    1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff,
-    1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff,
-    0 1.5px 0 #fff, 0 -1.5px 0 #fff,
-    1.5px 0 0 #fff, -1.5px 0 0 #fff;
-}
+    /* 文字の縁取りを共通化して読みやすく */
+    .zone-name, .zone-status {
+      font-weight: 900;
+      line-height: 1.1;
+      text-align: center;
+      white-space: nowrap;
+      /* どんな背景でも読めるように白い縁取りをつける */
+      text-shadow: 
+        1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff,
+        1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff,
+        0 1.5px 0 #fff, 0 -1.5px 0 #fff,
+        1.5px 0 0 #fff, -1.5px 0 0 #fff;
+    }
 
-.zone-name {
-  font-size: 0.85rem;
-  color: #000; /* 地区名は常に黒 */
-  margin-bottom: 2px;
-}
+    .zone-name {
+      font-size: 0.9rem;
+      color: #000;
+      margin-bottom: 1px;
+    }
 
-.zone-status {
-  font-size: 0.7rem;
-  /* 色はJSで指定されます */
-}
+    .zone-status {
+      font-size: 0.75rem;
+    }
+
+    /* 下部リスト */
     .list-area {
       background: white;
       border-radius: 16px;
       padding: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .list-title {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
     }
 
     .zone-list {
@@ -213,23 +186,8 @@
       border-radius: 14px;
       padding: 10px;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-weight: bold;
       text-align: center;
-      transition: transform 0.12s ease;
-      min-height: 100px;
-    }
-
-    .zone-card .name { font-size: 1rem; margin-bottom: 4px; }
-    .zone-card .status { font-size: 0.9rem; margin-bottom: 6px; }
-
-    .times {
-      font-size: 0.7rem;
-      line-height: 1.4;
-      font-weight: normal;
-      color: #444;
-      border-top: 1px solid rgba(0,0,0,0.1);
-      padding-top: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     @media (max-width: 600px) {
@@ -240,7 +198,7 @@
 <body>
   <div class="wrap">
     <h1>廃品回収 状態管理</h1>
-    <div class="sub">地図のエリアまたは地区名をタップして更新してください</div>
+    <div class="sub">地図のエリアまたは文字をタップすると色が切り替わります</div>
 
     <div class="summary" id="summary"></div>
 
@@ -256,24 +214,23 @@
     </div>
 
     <div class="map-area" id="mapArea">
-      <img src="map.png" alt="回収エリア地図" class="map-image">
-      </div>
+      <img src="map.png" alt="地図" class="map-image">
+    </div>
 
     <div class="list-area">
-      <h2 class="list-title">一覧から管理</h2>
+      <h2 style="font-size:1.1rem; margin-bottom:12px;">一覧</h2>
       <div class="zone-list" id="zoneList"></div>
     </div>
   </div>
 
   <script>
     const STATUS = [
-      { label: "未着手", color: "#bdbdbd" },
-      { label: "開始", color: "#81d4fa" },
-      { label: "担当完了", color: "#ffd54f" },
-      { label: "役員完了", color: "#66bb6a" }
+      { label: "未着手", color: "#bdbdbd", text: "#666" },
+      { label: "開始", color: "#81d4fa", text: "#0288d1" },
+      { label: "担当完了", color: "#ffd54f", text: "#f57c00" },
+      { label: "役員完了", color: "#66bb6a", text: "#2e7d32" }
     ];
 
-    // ボタン（文字）の配置座標
     const zones = [
       { name: "1区",  x: 60, y: 55 },
       { name: "1区A", x: 70, y: 45 },
@@ -293,17 +250,10 @@
       { name: "9区G", x: 64, y: 35 }
     ];
 
-    // 色塗り範囲の定義（作成途中）
     const zonePolygons = {
-      "1区": [
-        [50, 49], [55, 49], [55, 52], [59, 52], [59, 55], [61, 54.5], [61, 56], 
-        [64.8, 56], [64.8, 56.5], [66, 56.5], [67, 61], [69, 61], [70, 65], 
-        [71, 65], [72, 63], [73, 64], [73, 66], [74, 66], [74, 66.5], [72, 55], 
-        [70, 54.5], [61, 56], [60, 56], [58, 56.5], [53, 65], [52, 64], [52, 65], 
-        [51.5, 65], [51.5, 59], [51, 59], [50.5, 52]
-      ],
-      "9区A": [ [6, 1], [25, 1], [31, 28], [30, 36], [8.5, 37] ],
-      "9区B": [ [8.5, 37], [30, 36], [30, 50], [8.5, 50] ]
+      "1区": [[50,49],[55,49],[55,52],[59,52],[59,55],[61,54.5],[61,56],[64.8,56],[64.8,56.5],[66,56.5],[67,61],[69,61],[70,65],[71,65],[72,63],[73,64],[73,66],[74,66],[74,66.5],[72,55],[70,54.5],[61,56],[60,56],[58,56.5],[53,65],[52,64],[52,65],[51.5,65],[51.5,59],[51,59],[50.5,52]],
+      "9区A": [[6,1],[25,1],[31,28],[30,36],[8.5,37]],
+      "9区B": [[8.5,37],[30,36],[30,50],[8.5,50]]
     };
 
     const STORAGE_KEY = "haipin_status_map_v3";
@@ -317,65 +267,32 @@
     function loadState() {
       const raw = localStorage.getItem(STORAGE_KEY);
       const initial = {};
-      zones.forEach(z => {
-        initial[z.name] = { status: 0, startTime: "", staffDoneTime: "", officerDoneTime: "" };
-      });
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          return Object.assign(initial, parsed);
-        } catch (e) { return initial; }
-      }
+      zones.forEach(z => initial[z.name] = { status: 0, startTime: "", staffDoneTime: "", officerDoneTime: "" });
+      if (raw) { try { return Object.assign(initial, JSON.parse(raw)); } catch (e) { return initial; } }
       return initial;
     }
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
     function nextStatus(name) {
-      const zone = state[name];
-      if (!zone) return;
+      const z = state[name];
       const now = formatTime();
-
-      if (zone.status === 0) {
-        zone.status = 1;
-        if (!zone.startTime) zone.startTime = now;
-      } else if (zone.status === 1) {
-        zone.status = 2;
-        if (!zone.staffDoneTime) zone.staffDoneTime = now;
-      } else if (zone.status === 2) {
-        zone.status = 3;
-        if (!zone.officerDoneTime) zone.officerDoneTime = now;
-      } else {
-        zone.status = 0;
-        zone.startTime = "";
-        zone.staffDoneTime = "";
-        zone.officerDoneTime = "";
-      }
-      saveState();
-      render();
-    }
-
-    function resetAll() {
-      if (!confirm("全ての進捗をリセットして「未着手」に戻しますか？")) return;
-      Object.keys(state).forEach(name => {
-        state[name] = { status: 0, startTime: "", staffDoneTime: "", officerDoneTime: "" };
-      });
-      saveState();
-      render();
+      if (z.status === 0) { z.status = 1; z.startTime = now; }
+      else if (z.status === 1) { z.status = 2; z.staffDoneTime = now; }
+      else if (z.status === 2) { z.status = 3; z.officerDoneTime = now; }
+      else { z.status = 0; z.startTime = z.staffDoneTime = z.officerDoneTime = ""; }
+      saveState(); render();
     }
 
     function render() {
       const mapArea = document.getElementById("mapArea");
       
-      // 1. サマリー表示
-      const summary = document.getElementById("summary");
+      // サマリー
       const counts = [0, 0, 0, 0];
       Object.values(state).forEach(v => counts[v.status]++);
-      summary.innerHTML = STATUS.map((s, i) => `<div class="summary-box">${s.label} ${counts[i]}</div>`).join("");
+      document.getElementById("summary").innerHTML = STATUS.map((s, i) => `<div class="summary-box">${s.label} ${counts[i]}</div>`).join("");
 
-      // 2. SVG色塗り描画
+      // SVG
       let svg = document.getElementById("zoneSvg");
       if (!svg) {
         svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -386,62 +303,48 @@
       }
       svg.innerHTML = "";
       Object.keys(zonePolygons).forEach(name => {
-        const polygonState = state[name];
-        if (!polygonState) return;
         const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        const points = zonePolygons[name].map(p => p.join(",")).join(" ");
-        poly.setAttribute("points", points);
-        poly.setAttribute("fill", STATUS[polygonState.status].color);
-        poly.setAttribute("fill-opacity", "0.4");
+        poly.setAttribute("points", zonePolygons[name].map(p => p.join(",")).join(" "));
+        poly.setAttribute("fill", STATUS[state[name].status].color);
+        poly.setAttribute("fill-opacity", "0.5");
         poly.setAttribute("stroke", "white");
-        poly.setAttribute("stroke-width", "0.2");
+        poly.setAttribute("stroke-width", "0.3");
         poly.onclick = () => nextStatus(name);
         svg.appendChild(poly);
       });
 
-      // 3. 地図上のボタン表示
+      // ボタン（文字のみ）
       mapArea.querySelectorAll(".zone-btn").forEach(el => el.remove());
       zones.forEach(z => {
-        const zoneState = state[z.name];
+        const s = state[z.name];
         const btn = document.createElement("button");
         btn.className = "zone-btn";
         btn.style.left = z.x + "%";
         btn.style.top = z.y + "%";
         btn.innerHTML = `
           <span class="zone-name">${z.name}</span>
-          <span class="zone-status" style="color:${STATUS[zoneState.status].color === '#bdbdbd' ? '#666' : STATUS[zoneState.status].color}">
-            ${STATUS[zoneState.status].label}
-          </span>
+          <span class="zone-status" style="color:${STATUS[s.status].text}">${STATUS[s.status].label}</span>
         `;
         btn.onclick = (e) => { e.stopPropagation(); nextStatus(z.name); };
         mapArea.appendChild(btn);
       });
 
-      // 4. 下部リスト表示
+      // リスト
       const list = document.getElementById("zoneList");
       list.innerHTML = "";
       zones.forEach(z => {
-        const zoneState = state[z.name];
+        const s = state[z.name];
         const card = document.createElement("div");
         card.className = "zone-card";
-        card.style.background = STATUS[zoneState.status].color;
-        card.innerHTML = `
-          <div class="name">${z.name}</div>
-          <div class="status">${STATUS[zoneState.status].label}</div>
-          <div class="times">
-            開始 ${zoneState.startTime || "-"}<br>
-            担当 ${zoneState.staffDoneTime || "-"}<br>
-            役員 ${zoneState.officerDoneTime || "-"}
-          </div>
-        `;
+        card.style.background = STATUS[s.status].color;
+        card.innerHTML = `<strong>${z.name}</strong><br><small>${STATUS[s.status].label}</small>`;
         card.onclick = () => nextStatus(z.name);
         list.appendChild(card);
       });
     }
 
-    // 初期化
     state = loadState();
-    document.getElementById("resetBtn").onclick = resetAll;
+    document.getElementById("resetBtn").onclick = () => { if(confirm("リセットしますか？")) { Object.keys(state).forEach(n => state[n]={status:0,startTime:"",staffDoneTime:"",officerDoneTime:""}); saveState(); render(); } };
     render();
   </script>
 </body>
