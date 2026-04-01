@@ -190,11 +190,13 @@
 
 
 
-  // --- 自動更新の追加 ---
-// 30,000ミリ秒（30秒）ごとに fetchSheetData 関数を実行する
-setInterval(() => {
-  console.log("自動更新を実行します...");
-  if (typeof fetchSheetData === "function") {
+// --- 自動更新の追加（より確実な版） ---
+setInterval(function() {
+  console.log("30秒経ったのでデータを再取得します");
+  // updateData() という名前の関数があればそれを実行、なければ fetchSheetData
+  if (typeof updateData === "function") {
+    updateData();
+  } else if (typeof fetchSheetData === "function") {
     fetchSheetData();
   }
 }, 30000);
