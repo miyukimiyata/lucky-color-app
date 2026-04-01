@@ -135,42 +135,59 @@
       transition: fill 0.2s;
     }
 
-    .zone-btn {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      width: 60px;
-      min-height: 40px;
-      border: none;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.5); /* 文字を見やすくするため少し白背景 */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #222;
-      z-index: 3; /* 一番上に配置 */
-      padding: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-/* ▼ここを追加：ボタン連打による選択を防ぐ */
+  .zone-btn {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  
+  /* ボタンのサイズ感 */
+  min-width: 54px;
+  padding: 4px 6px;
+
+  border: none;
+  border-radius: 6px;
+
+  /* ▼ 1. 背景を少し濃い目の半透明白にする（地図の線を隠す） */
+  background: rgba(255, 255, 255, 0.85); 
+  
+  /* ▼ 2. 軽い影をつけて浮かび上がらせる */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  
+  /* 連打「青くなる現象」対策 */
   user-select: none;
   -webkit-user-select: none;
-    }
+  -webkit-tap-highlight-color: transparent;
+}
 
     .zone-btn:active {
       transform: translate(-50%, -50%) scale(0.95);
     }
 
-    .zone-name {
-      font-size: 0.75rem;
-      font-weight: bold;
-      white-space: nowrap;
-    }
+   .zone-name {
+  font-size: 0.85rem;
+  font-weight: 900; /* 極太にする */
+  color: #000;      /* 文字は真っ黒 */
+  line-height: 1.2;
+  
+  /* ▼ 3. 文字自体に白縁をつけて、背景に紛れないようにする */
+  text-shadow: 
+    2px 2px 0 #fff, -2px -2px 0 #fff,
+    2px -2px 0 #fff, -2px 2px 0 #fff,
+    0 2px 0 #fff, 0 -2px 0 #fff,
+    2px 0 0 #fff, -2px 0 0 #fff;
+}
 
-    .zone-status {
-      font-size: 0.6rem;
-      margin-top: 2px;
-    }
+  .zone-status {
+  font-size: 0.65rem;
+  font-weight: bold;
+  /* ステータスの色はJavaScript側でつくのでここでは指定なし */
+}
 
     .list-area {
       background: white;
