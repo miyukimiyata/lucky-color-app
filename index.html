@@ -190,14 +190,12 @@
 
 
 
-// --- 自動更新の追加（より確実な版） ---
+// --- 自動更新の追加 ---
+// 30秒ごとにスプレッドシートから最新データを読み込む
 setInterval(function() {
-  console.log("30秒経ったのでデータを再取得します");
-  // updateData() という名前の関数があればそれを実行、なければ fetchSheetData
-  if (typeof updateData === "function") {
-    updateData();
-  } else if (typeof fetchSheetData === "function") {
-    fetchSheetData();
+  console.log("30秒経ったので自動更新します");
+  if (typeof loadFromSheet === "function") {
+    loadFromSheet();
   }
 }, 30000);
 </script>
