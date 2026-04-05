@@ -26,37 +26,24 @@
     <button onclick="clearLog()">リセット</button>
 
     <script>
-        const container = document.getElementById('canvas-container');
-        const log = document.getElementById('log');
-        let points = [];
-
         container.addEventListener('click', function(e) {
-            const rect = container.getBoundingClientRect();
-            const x = Math.round(e.clientX - rect.left);
-            const y = Math.round(e.clientY - rect.top);
+        const rect = container.getBoundingClientRect();
+        
+        // 【重要】画像の表示サイズに対して、何％の位置か計算する
+        const xPercent = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
+        const yPercent = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
 
-            // 赤い点を表示
-            const dot = document.createElement('div');
-            dot.className = 'dot';
-            dot.style.left = x + 'px';
-            dot.style.top = y + 'px';
-            container.appendChild(dot);
+        // 赤い点を表示（見た目用）
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.left = (e.clientX - rect.left) + 'px';
+        dot.style.top = (e.clientY - rect.top) + 'px';
+        container.appendChild(dot);
 
-            // 座標を記録
-            points.push(`${x},${y}`);
-            updateLog();
-        });
-
-        function updateLog() {
-            log.innerText = "現在のポリゴン用データ:\n" + points.join(' ');
-        }
-
-        function clearLog() {
-            points = [];
-            log.innerText = "ここに座標が表示されます";
-            const dots = document.querySelectorAll('.dot');
-            dots.forEach(d => d.remove());
-        }
+        // 以前の形式 [x, y] に合わせて記録
+        points.push(`[${xPercent},${yPercent}]`);
+        updateLog();
+    });
     </script>
 </body>
 </html>
