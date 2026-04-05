@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>座標取得ツール</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        #canvas-container { position: relative; display: inline-block; border: 2px solid #333; cursor: crosshair; }
+        img { display: block; max-width: 100%; height: auto; }
+        .dot { position: absolute; width: 6px; height: 6px; background: red; border-radius: 50%; transform: translate(-50%, -50%); }
+        #log { margin-top: 20px; padding: 10px; background: #eee; min-height: 50px; white-space: pre-wrap; word-break: break-all; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>座標取得ツール</h2>
+    <p>地図をクリックして点をつなげてください。下の座標をコピーして使えます。</p>
+
+    <div id="canvas-container">
+        <img src="mark.png" id="target-map">
+    </div>
+
+    <div id="log">ここに座標が表示されます</div>
+    <br>
+    <button onclick="clearLog()">リセット</button>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const log = document.getElementById('log');
+        let points = [];
+
+        container.addEventListener('click', function(e) {
+            const rect = container.getBoundingClientRect();
+            const x = Math.round(e.clientX - rect.left);
+            const y = Math.round(e.clientY - rect.top);
+
+            // 赤い点を表示
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.left = x + 'px';
+            dot.style.top = y + 'px';
+            container.appendChild(dot);
+
+            // 座標を記録
+            points.push(`${x},${y}`);
+            updateLog();
+        });
+
+        function updateLog() {
+            log.innerText = "現在のポリゴン用データ:\n" + points.join(' ');
+        }
+
+        function clearLog() {
+            points = [];
+            log.innerText = "ここに座標が表示されます";
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach(d => d.remove());
+        }
+    </script>
+</body>
+</html>
