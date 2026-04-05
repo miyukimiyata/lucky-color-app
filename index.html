@@ -24,7 +24,7 @@
       touch-action: pan-x pan-y pinch-zoom;
     }
     .map-image { width: 100%; height: auto; display: block; }
-    #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none;touch-action: none; }
+    #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: auto;touch-action: pan-x pan-y pinch-zoom; }
     .label-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
     
     .zone-label { position: absolute; transform: translate(-50%, -50%); text-align: center; pointer-events: auto; cursor: pointer; }
