@@ -25,11 +25,16 @@
     <br>
     <button onclick="clearLog()">リセット</button>
 
-    <script>
-        container.addEventListener('click', function(e) {
+   <script>
+    const container = document.getElementById('canvas-container');
+    const targetMap = document.getElementById('target-map');
+    const log = document.getElementById('log');
+    let points = [];
+
+    container.addEventListener('click', function(e) {
         const rect = container.getBoundingClientRect();
         
-        // 【重要】画像の表示サイズに対して、何％の位置か計算する
+        // 【重要】クリックした位置が、画像全体の何％にあるかを計算（小数点1位まで）
         const xPercent = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
         const yPercent = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
 
@@ -40,10 +45,22 @@
         dot.style.top = (e.clientY - rect.top) + 'px';
         container.appendChild(dot);
 
-        // 以前の形式 [x, y] に合わせて記録
-        points.push(`[${xPercent},${yPercent}]`);
+        // 以前のデータ形式に合わせて [x, y] の形で記録
+        points.push(`[${xPercent}, ${yPercent}]`);
         updateLog();
     });
-    </script>
+
+    function updateLog() {
+        // コピーしやすいようにカンマ区切りで表示
+        log.innerText = "現在のポリゴン用データ:\n" + points.join(', ');
+    }
+
+    function clearLog() {
+        points = [];
+        log.innerText = "ここに座標が表示されます";
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach(d => d.remove());
+    }
+</script>
 </body>
 </html>
