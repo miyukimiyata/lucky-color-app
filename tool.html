@@ -2,65 +2,114 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>座標取得ツール</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>座標取得ツール（％単位版）</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        #canvas-container { position: relative; display: inline-block; border: 2px solid #333; cursor: crosshair; }
-        img { display: block; max-width: 100%; height: auto; }
-        .dot { position: absolute; width: 6px; height: 6px; background: red; border-radius: 50%; transform: translate(-50%, -50%); }
-        #log { margin-top: 20px; padding: 10px; background: #eee; min-height: 50px; white-space: pre-wrap; word-break: break-all; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        body { font-family: sans-serif; text-align: center; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        h2 { color: #333; }
+        /* 地図を包むコンテナ */
+        #canvas-container { 
+            position: relative; 
+            display: inline-block; 
+            border: 2px solid #333; 
+            background: #fff;
+            cursor: crosshair; 
+            max-width: 95%; /* 画面からはみ出さないように */
+        }
+        /* 地図画像の設定 */
+        img { display: block; width: 100%; height: auto; }
+        /* クリックした時の赤い点 */
+        .dot { 
+            position: absolute; 
+            width: 8px; 
+            height: 8px; 
+            background: red; 
+            border-radius: 50%; 
+            transform: translate(-50%, -50%); 
+            pointer-events: none; /* 点がクリックの邪魔をしないように */
+        }
+        /* 座標を表示するエリア */
+        #log-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #log { 
+            font-family: monospace; 
+            background: #eee; 
+            padding: 10px; 
+            min-height: 40px; 
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        button { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+        }
+        button:hover { background: #0056b3; }
     </style>
 </head>
 <body>
 
-    <h2>座標取得ツール</h2>
-    <p>地図をクリックして点をつなげてください。下の座標をコピーして使えます。</p>
+    <h2>座標取得ツール（％単位）</h2>
+    <p>地図の角をクリックしてください。以前のデータと同じ「％」で出力します。</p>
 
     <div id="canvas-container">
         <img src="map.png" id="target-map">
     </div>
 
-    <div id="log">ここに座標が表示されます</div>
-    <br>
-    <button onclick="clearLog()">リセット</button>
+    <div id="log-container">
+        <strong>現在のポリゴン用データ:</strong>
+        <div id="log">ここに [x, y] が表示されます</div>
+        <button onclick="clearLog()">リセット（点も消去）</button>
+    </div>
 
-   <script>
-    const container = document.getElementById('canvas-container');
-    const targetMap = document.getElementById('target-map');
-    const log = document.getElementById('log');
-    let points = [];
+    <script>
+        const container = document.getElementById('canvas-container');
+        const log = document.getElementById('log');
+        let points = [];
 
-    container.addEventListener('click', function(e) {
-        const rect = container.getBoundingClientRect();
-        
-        // 【重要】クリックした位置が、画像全体の何％にあるかを計算（小数点1位まで）
-        const xPercent = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
-        const yPercent = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
+        container.addEventListener('click', function(e) {
+            const rect = container.getBoundingClientRect();
+            
+            // 【重要】画像の表示サイズに対して何％の位置か計算
+            // 以前の [58, 31.4] という形式に合わせるため小数点1位まで
+            const xPercent = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(1));
+            const yPercent = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(1));
 
-        // 赤い点を表示（見た目用）
-        const dot = document.createElement('div');
-        dot.className = 'dot';
-        dot.style.left = (e.clientX - rect.left) + 'px';
-        dot.style.top = (e.clientY - rect.top) + 'px';
-        container.appendChild(dot);
+            // 赤い点を表示（見た目の確認用）
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.style.left = (e.clientX - rect.left) + 'px';
+            dot.style.top = (e.clientY - rect.top) + 'px';
+            container.appendChild(dot);
 
-        // 以前のデータ形式に合わせて [x, y] の形で記録
-        points.push(`[${xPercent}, ${yPercent}]`);
-        updateLog();
-    });
+            // 以前の形式 [x, y] で配列に追加
+            points.push(`[${xPercent}, ${yPercent}]`);
+            updateLog();
+        });
 
-    function updateLog() {
-        // コピーしやすいようにカンマ区切りで表示
-        log.innerText = "現在のポリゴン用データ:\n" + points.join(', ');
-    }
+        function updateLog() {
+            // コピーしやすいように [x,y], [x,y] の形で表示
+            log.innerText = points.join(', ');
+        }
 
-    function clearLog() {
-        points = [];
-        log.innerText = "ここに座標が表示されます";
-        const dots = document.querySelectorAll('.dot');
-        dots.forEach(d => d.remove());
-    }
-</script>
+        function clearLog() {
+            points = [];
+            log.innerText = "ここに [x, y] が表示されます";
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach(d => d.remove());
+        }
+    </script>
 </body>
 </html>
