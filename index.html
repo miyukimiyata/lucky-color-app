@@ -12,11 +12,11 @@
     
     .loading-notice { text-align: center; font-size: 0.8rem; color: #666; height: 1.5rem; font-weight: bold; }
     .controls { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
-    .btn { padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; color: white; background: var(--accent); }
+    .btn { padding: 10px 15px; border: none; border-radius: 8px; font-weight: bold; color: white; background: var(--accent); cursor: pointer; }
 
-    /* 地図エリア：歪みを防ぎ、操作性を確保 */
+    /* 地図エリア：アスペクト比を維持し、歪みを完全防止 */
     .map-outer {
-      position: relative; width: 100%; height: 65vh; 
+      position: relative; width: 100%; height: 60vh; 
       background: #ccc; border-radius: 12px; overflow: hidden; touch-action: none;
     }
     #mapInner {
@@ -25,28 +25,41 @@
       transition: transform 0.2s ease-out;
       transform-origin: center center;
     }
-    /* 画像を歪ませない設定 */
-    .map-image { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
-    
-    /* SVGとラベルを画像の上に正しく配置 */
-    #map-overlay {
-      position: absolute; width: 100%; height: 100%;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-      pointer-events: none;
+    /* 画像とSVGを重ねるためのラッパー */
+    .map-wrapper {
+      position: relative;
+      display: inline-block; /* 画像のサイズにフィット */
+      line-height: 0;
     }
-    #map-svg { width: 100%; height: 100%; pointer-events: none; }
-    .label-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    .map-image {
+      max-width: 100%; max-height: 60vh; 
+      object-fit: contain; pointer-events: none;
+    }
+    
+    /* SVGとラベルを画像に完全同期 */
+    #map-svg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 10; pointer-events: none;
+    }
+    .label-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 20; pointer-events: none;
+    }
 
     .zone-label { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; }
-    .z-name { display: block; font-size: 0.75rem; font-weight: bold; text-shadow: 1px 1px 2px #fff; white-space: nowrap; }
+    .z-name { display: block; font-size: 0.7rem; font-weight: bold; text-shadow: 1px 1px 1px #fff; white-space: nowrap; }
 
-    /* リスト：2列、ラベル付き */
-    .list-view { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    .card { background: #fff; padding: 10px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 6px solid #ccc; }
-    .card-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 6px; border-bottom: 1px solid #eee; }
-    .st-item { display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 2px; }
-    .st-label { color: #777; }
-    .st-time { font-family: monospace; font-weight: bold; }
+    /* ステータスカード：2列 & 全面カラー */
+    .list-view { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+    .card { 
+      padding: 10px; border-radius: 10px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+      border: 1px solid rgba(0,0,0,0.1);
+      transition: background 0.3s;
+    }
+    .card-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .st-item { display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 2px; font-weight: bold; }
+    .st-time { font-family: monospace; }
   </style>
 </head>
 <body>
@@ -60,12 +73,10 @@
 
   <div class="map-outer" id="mapBox">
     <div id="mapInner">
-      <div id="map-wrap" style="position:relative;">
-        <img src="map.png" class="map-image" id="baseImg">
-        <div id="map-overlay">
-          <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-          <div class="label-layer" id="labelLayer"></div>
-        </div>
+      <div class="map-wrapper" id="mapWrap">
+        <img src="map.png" class="map-image" id="baseImg" onload="render()">
+        <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+        <div class="label-layer" id="labelLayer"></div>
       </div>
     </div>
   </div>
@@ -77,10 +88,10 @@
   const APP_URL = "https://script.google.com/macros/s/AKfycbxfMBqSQ5F2n8-8od1DZKj__KeUrtKIvDADeB1ghetiJPFRMrEj4PEt7GW3diSSfDUJ/exec";
 
   const STATUS = [
-    {l:"未着手", c:"#f8f9fa"},
-    {l:"開始", c:"#81d4fa"},
-    {l:"担当完", c:"#ffd54f"},
-    {l:"役員完", c:"#66bb6a"}
+    {l:"未着手", c:"#ffffff", tc:"#333"},
+    {l:"開始", c:"#81d4fa", tc:"#000"},
+    {l:"担当完", c:"#ffd54f", tc:"#000"},
+    {l:"役員完", c:"#66bb6a", tc:"#000"}
   ];
 
   const ZONES = [
@@ -95,17 +106,7 @@
 
   let state = {};
 
-  // --- 地図位置調整用 ---
-  function adjustOverlay() {
-    const img = document.getElementById('baseImg');
-    const overlay = document.getElementById('map-overlay');
-    // 画像が実際に表示されているサイズにオーバーレイを合わせる
-    overlay.style.width = img.clientWidth + 'px';
-    overlay.style.height = img.clientHeight + 'px';
-  }
-  window.addEventListener('resize', adjustOverlay);
-
-  // --- ズーム＆ドラッグ ---
+  // --- ズーム＆ドラッグ（座標計算をシンプル化） ---
   let scale = 1, posX = 0, posY = 0, lastX, lastY, isDrag = false;
   const mapBox = document.getElementById('mapBox');
   const mapInner = document.getElementById('mapInner');
@@ -122,7 +123,7 @@
     e.preventDefault();
     posX = e.touches[0].clientX - lastX;
     posY = e.touches[0].clientY - lastY;
-    updateXform();
+    mapInner.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
   });
   mapBox.addEventListener('touchend', () => isDrag = false);
 
@@ -132,22 +133,18 @@
     if (now - lastTap < 300) {
       if(scale > 1) { resetZoom(); }
       else {
-        scale = 3;
+        scale = 2.5;
         const rect = mapBox.getBoundingClientRect();
         const touch = e.changedTouches[0];
-        // 触った場所を中心に持ってくる
-        posX = (rect.width/2 - (touch.clientX - rect.left)) * (scale - 1);
-        posY = (rect.height/2 - (touch.clientY - rect.top)) * (scale - 1);
-        updateXform();
+        posX = (rect.width/2 - (touch.clientX - rect.left)) * scale;
+        posY = (rect.height/2 - (touch.clientY - rect.top)) * scale;
+        mapInner.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
       }
     }
     lastTap = now;
   });
 
-  function updateXform() {
-    mapInner.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  }
-  function resetZoom() { scale=1; posX=0; posY=0; updateXform(); }
+  function resetZoom() { scale=1; posX=0; posY=0; mapInner.style.transform = `translate(0,0) scale(1)`; }
 
   // --- 通信と描画 ---
   async function loadFromSheet() {
@@ -156,9 +153,8 @@
       const res = await fetch(`${APP_URL}?t=${Date.now()}`);
       state = await res.json();
       render();
-      adjustOverlay();
-      document.getElementById("msg").innerText = "更新完了: " + new Date().toLocaleTimeString();
-    } catch (e) { document.getElementById("msg").innerText = "読込エラー"; render(); adjustOverlay(); }
+      document.getElementById("msg").innerText = "更新: " + new Date().toLocaleTimeString();
+    } catch (e) { document.getElementById("msg").innerText = "読込失敗"; render(); }
   }
 
   function toggle(name) {
@@ -175,18 +171,21 @@
   }
 
   function render() {
+    // 地図SVG
     const svg = document.getElementById("map-svg"); svg.innerHTML = "";
     Object.keys(POLYGONS).forEach(n => {
       const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       p.setAttribute("points", POLYGONS[n].map(pt => pt.join(",")).join(" "));
-      p.setAttribute("fill", STATUS[state[n]?.status || 0].c);
-      p.setAttribute("fill-opacity", "0.6");
+      const s = state[n]?.status || 0;
+      p.setAttribute("fill", STATUS[s].c);
+      p.setAttribute("fill-opacity", s === 0 ? "0" : "0.6");
       p.setAttribute("stroke", "#000"); p.setAttribute("stroke-width", "0.2");
       p.style.pointerEvents = "auto";
       p.onclick = (e) => { e.stopPropagation(); toggle(n); };
       svg.appendChild(p);
     });
 
+    // ラベル
     const layer = document.getElementById("labelLayer"); layer.innerHTML = "";
     ZONES.forEach(z => {
       const div = document.createElement("div"); div.className = "zone-label";
@@ -196,15 +195,17 @@
       layer.appendChild(div);
     });
 
+    // リスト（全面カラー）
     const lv = document.getElementById("listView"); lv.innerHTML = "";
     ZONES.forEach(z => {
       const s = state[z.name] || {status:0};
       const c = document.createElement("div"); c.className = "card";
-      c.style.borderLeftColor = STATUS[s.status].c;
+      c.style.backgroundColor = STATUS[s.status].c;
+      c.style.color = STATUS[s.status].tc;
       c.innerHTML = `<div class="card-title">${z.name}</div>
-        <div class="st-item"><span class="st-label">開始</span><span class="st-time">${s.start||'--:--'}</span></div>
-        <div class="st-item"><span class="st-label">担当完</span><span class="st-time">${s.tantoEnd||'--:--'}</span></div>
-        <div class="st-item"><span class="st-label">役員完</span><span class="st-time">${s.yakuinEnd||'--:--'}</span></div>`;
+        <div class="st-item"><span>開始</span><span class="st-time">${s.start||'--:--'}</span></div>
+        <div class="st-item"><span>担当</span><span class="st-time">${s.tantoEnd||'--:--'}</span></div>
+        <div class="st-item"><span>役員</span><span class="st-time">${s.yakuinEnd||'--:--'}</span></div>`;
       c.onclick = () => toggle(z.name);
       lv.appendChild(c);
     });
