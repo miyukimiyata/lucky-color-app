@@ -3,21 +3,19 @@
 <head>
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
-
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-
-  
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>廃品回収共有地図</title>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 120px; overflow-x: auto; }
+    body { margin: 0; font-family: sans-serif; background: #f0f0f0; padding-bottom: 120px; }
     .container { max-width: 100%; margin: 0 auto; padding: 10px; }
     h1 { text-align: center; font-size: 1.1rem; margin: 5px 0; }
     .loading-notice { text-align: center; font-size: 0.8rem; color: #666; margin-bottom: 5px; }
 
+    /* 地図エリア */
     .map-container {
       position: relative; width: 100%; background: #ccc; line-height: 0;
       border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -35,13 +33,22 @@
     .z-name { font-size: 0.85rem; }
     .z-status { font-size: 0.6rem; }
 
-    .list-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 20px; }
-    .card { padding: 10px; border-radius: 8px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000; }
-    .card-title { font-weight: bold; font-size: 0.85rem; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 4px; }
-    .card-time { font-size: 0.7rem; line-height: 1.4; opacity: 0.8; }
-    
-    .controls { text-align: center; margin: 10px 0; }
-    .btn-refresh { padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 20px; font-weight: bold; }
+    /* コントロール */
+    .controls { text-align: center; margin: 10px 0; display: flex; justify-content: center; gap: 10px; }
+    .btn { padding: 8px 15px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+    .btn-refresh { background: #007bff; color: white; }
+    .btn-reset { background: #dc3545; color: white; }
+
+    /* リストビュー：3段（3列）表示への修正 */
+    .list-view { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); /* 常に3列 */
+      gap: 6px; 
+      margin-top: 20px; 
+    }
+    .card { padding: 8px 4px; border-radius: 6px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; color: #000; }
+    .card-title { font-weight: bold; font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 3px; }
+    .card-time { font-size: 0.6rem; line-height: 1.2; opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -49,8 +56,10 @@
 <div class="container">
   <h1>廃品回収 共有管理</h1>
   <div class="loading-notice" id="msg">データ読み込み中...</div>
+  
   <div class="controls">
-    <button class="btn-refresh" onclick="loadFromSheet()">最新に更新</button>
+    <button class="btn btn-refresh" onclick="loadFromSheet()">最新に更新</button>
+    <button class="btn btn-reset" onclick="resetAllZones()">全リセット</button>
   </div>
 
   <div class="map-container" id="mapBox">
@@ -63,11 +72,11 @@
 </div>
 
 <script>
-  // ★ここにコピーしたURLを貼り付けてください★
   const APP_URL = "https://script.google.com/macros/s/AKfycbxjCz_md6D5oMMarfnZ_5Os4n2YXipVuTzLg-ck2nb9L5W4U2Gw4u8_ur8ZDD-BkDoq/exec"; 
 
+  // 未着手の色を少し薄め(#e0e0e0)に変更
   const STATUS = [
-    { label: "未着手", color: "#bdbdbd" },
+    { label: "未着手", color: "#e0e0e0" },
     { label: "開始", color: "#81d4fa" },
     { label: "担当完了", color: "#ffd54f" },
     { label: "役員完了", color: "#66bb6a" }
@@ -81,6 +90,7 @@
     { name: "9区D", x: 50, y: 25 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 67, y: 34 }
   ];
 
+  // ポリゴンデータはそのまま保持
   const polygons = {
     "1区": [[49.6,49.1],[54.9,48.6],[55.1,51.6],[58.6,51.5],[58.9,55.1],[60.8,54.7],[60.7,55.7],[64.8,55.7],[64.5,56.7],[66.3,56.5],[67.6,60.8],[69.6,60.7],[70.5,64.7],[71.4,64.6],[71.7,66.4],[72.6,66.6],[72.6,67.1],[70.1,67.2],[70.2,70],[66.4,70.2],[66.7,72.8],[64.6,73],[64.8,71.9],[63.7,72],[64,73.1],[63,73.2],[62.8,72],[61.1,72.2],[61.1,72.8],[59.9,72.8],[60.2,71.6],[56.7,71.2],[56.9,68.8],[54.5,68.5],[54.8,65.8],[53.3,65.7],[53.3,64.4],[51.6,64.4],[52.2,59.1],[51.3,59.1],[49.8,49.1]],
     "1区A": [[45.1,44.2],[69,37.3],[71.4,50.3],[71,51.3],[71.7,53.2],[68.9,53.7],[70.1,55.8],[68.4,56.1],[68.3,55.6],[66.1,55.6],[66.4,56.5],[64.8,56.5],[64.8,55.7],[60.5,55.6],[60.8,54.5],[59.2,55.2],[58.6,51.5],[55.1,51.8],[54.6,48.7],[49,49.3],[48.3,46.1],[46.2,46.7],[45.1,44.2]],
@@ -102,7 +112,6 @@
 
   let state = {};
 
-  // スプレッドシートからデータを読み込む
   async function loadFromSheet() {
     document.getElementById("msg").innerText = "同期中...";
     try {
@@ -115,7 +124,6 @@
     }
   }
 
-  // スプレッドシートへデータを送る
   async function saveToSheet(name, data) {
     document.getElementById("msg").innerText = "保存中...";
     await fetch(APP_URL, {
@@ -125,26 +133,47 @@
     document.getElementById("msg").innerText = "保存完了";
   }
 
+  // 全リセット機能
+  async function resetAllZones() {
+    if (!confirm("全てのステータスを未着手にリセットしますか？")) return;
+    
+    document.getElementById("msg").innerText = "一括リセット中...";
+    for (let zone of zones) {
+      state[zone.name] = { status: 0, start: "", end: "" };
+    }
+    render();
+
+    // サーバー側へ「全リセット」を通知（GAS側で一括処理する口がない場合は1つずつ送るか、特殊コマンドを送る）
+    // ここでは簡易的に全エリア分POSTします（GAS側の負荷に注意）
+    for (let name in state) {
+      await fetch(APP_URL, {
+        method: "POST",
+        body: JSON.stringify({ name: name, ...state[name] })
+      });
+    }
+    document.getElementById("msg").innerText = "リセット完了";
+  }
+
   function getCurrentTime() {
     const now = new Date();
     return now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
   }
 
   async function toggleStatus(name) {
-    let z = state[name];
-    if(!z) z = { status: 0, start: "", end: "" };
-    
+    let z = state[name] || { status: 0, start: "", end: "" };
     z.status = (z.status + 1) % 4;
+    
     if (z.status === 0) { z.start = ""; z.end = ""; }
     else if (z.status === 1) { z.start = getCurrentTime(); }
     else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); }
     
     state[name] = z;
-    render(); // 先に画面を変える（体感速度アップ）
-    await saveToSheet(name, z); // 裏でスプレッドシート保存
+    render();
+    await saveToSheet(name, z);
   }
 
   function render() {
+    // 地図のポリゴン描画
     const svg = document.getElementById("map-svg");
     svg.innerHTML = "";
     Object.keys(polygons).forEach(name => {
@@ -155,7 +184,7 @@
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
         p.setAttribute("fill", STATUS[z.status].color);
-        p.setAttribute("fill-opacity", "0.6");
+        p.setAttribute("fill-opacity", "0.7");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.2");
         p.style.pointerEvents = "auto";
@@ -164,6 +193,7 @@
       });
     });
 
+    // 地図上のラベル
     const layer = document.getElementById("labelLayer");
     layer.innerHTML = "";
     zones.forEach(z => {
@@ -177,6 +207,7 @@
       layer.appendChild(div);
     });
 
+    // 3段表示のカードリスト
     const lv = document.getElementById("listView");
     lv.innerHTML = "";
     zones.forEach(z => {
@@ -186,7 +217,7 @@
       c.style.background = STATUS[s.status].color;
       c.innerHTML = `
         <div class="card-title">${z.name}</div>
-        <div class="card-time">開始 ${s.start || '--:--'}<br>完了 ${s.end || '--:--'}</div>
+        <div class="card-time">${s.start || '--:--'}<br>${s.end || '--:--'}</div>
       `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
@@ -195,16 +226,9 @@
 
   window.onload = loadFromSheet;
 
-
-
-// --- 自動更新の追加 ---
-// 30秒ごとにスプレッドシートから最新データを読み込む
-setInterval(function() {
-  console.log("30秒経ったので自動更新します");
-  if (typeof loadFromSheet === "function") {
-    loadFromSheet();
-  }
-}, 30000);
+  setInterval(function() {
+    if (typeof loadFromSheet === "function") loadFromSheet();
+  }, 30000);
 </script>
 </body>
 </html>
