@@ -234,26 +234,29 @@
   }
 
   async function loadFromSheet() {
-    if (isLoading) return;
-    isLoading = true;
-    document.getElementById("msg").innerText = "同期中...";
+  if (isLoading || isSaving) return;
 
-    try {
-      const res = await fetch(APP_URL);
-      const data = await res.json();
-      state = data || {};
+  isLoading = true;
+  document.getElementById("msg").innerText = "同期中...";
 
-      render();
-      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
-    } catch (error) {
-      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
-    } finally {
-      isLoading = false;
-    }
+  try {
+    const res = await fetch(APP_URL);
+    const data = await res.json();
+    state = data || {};
+
+    render();
+    document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
+  } catch (error) {
+    document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
+  } finally {
+    isLoading = false;
   }
-
- async function saveToSheet(name, data) {
+}
+if (isLoading || isSaving) return;
+  
+async function saveToSheet(name, data) {
   document.getElementById("msg").innerText = "保存中...";
+  isSaving = true;
 
   try {
     await fetch(APP_URL, {
@@ -268,6 +271,10 @@
     console.error("保存失敗:", error);
     document.getElementById("msg").innerText = "保存エラー";
     return false;
+  } finally {
+    setTimeout(() => {
+      isSaving = false;
+    }, 1500);
   }
 }
 
@@ -386,11 +393,11 @@
 
   window.onload = loadFromSheet;
 
-  setInterval(() => {
-    if (typeof loadFromSheet === "function") {
-      loadFromSheet();
-    }
-  }, 30000);
+ setInterval(() => {
+  if (typeof loadFromSheet === "function") {
+    loadFromSheet();
+  }
+}, 30000);
 </script>
 
 </body>
