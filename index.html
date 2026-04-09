@@ -3,10 +3,8 @@
 <head>
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
-
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
   
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
@@ -24,7 +22,7 @@
       touch-action: pan-x pan-y pinch-zoom;
     }
     .map-image { width: 100%; height: auto; display: block; }
-    #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: auto;touch-action: pan-x pan-y pinch-zoom; }
+    #map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: auto; touch-action: pan-x pan-y pinch-zoom; }
     .label-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
     
     .zone-label { position: absolute; transform: translate(-50%, -50%); text-align: center; pointer-events: auto; cursor: pointer; }
@@ -40,8 +38,9 @@
     .card-title { font-weight: bold; font-size: 0.85rem; border-bottom: 1px solid rgba(0,0,0,0.05); margin-bottom: 4px; }
     .card-time { font-size: 0.7rem; line-height: 1.4; opacity: 0.8; }
     
-    .controls { text-align: center; margin: 10px 0; }
-    .btn-refresh { padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 20px; font-weight: bold; }
+    .controls { text-align: center; margin: 10px 0; display: flex; justify-content: center; gap: 10px; }
+    .btn-refresh { padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; }
+    .btn-reset { padding: 8px 20px; background: #dc3545; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -51,6 +50,7 @@
   <div class="loading-notice" id="msg">データ読み込み中...</div>
   <div class="controls">
     <button class="btn-refresh" onclick="loadFromSheet()">最新に更新</button>
+    <button class="btn-reset" onclick="resetAllZones()">全リセット</button>
   </div>
 
   <div class="map-container" id="mapBox">
@@ -63,11 +63,10 @@
 </div>
 
 <script>
-  // ★ここにコピーしたURLを貼り付けてください★
   const APP_URL = "https://script.google.com/macros/s/AKfycbxjCz_md6D5oMMarfnZ_5Os4n2YXipVuTzLg-ck2nb9L5W4U2Gw4u8_ur8ZDD-BkDoq/exec"; 
 
   const STATUS = [
-    { label: "未着手", color: "#bdbdbd" },
+    { label: "未着手", color: "rgba(0,0,0,0)" }, // ★グレーから透明に変更
     { label: "開始", color: "#81d4fa" },
     { label: "担当完了", color: "#ffd54f" },
     { label: "役員完了", color: "#66bb6a" }
@@ -102,7 +101,6 @@
 
   let state = {};
 
-  // スプレッドシートからデータを読み込む
   async function loadFromSheet() {
     document.getElementById("msg").innerText = "同期中...";
     try {
@@ -115,7 +113,6 @@
     }
   }
 
-  // スプレッドシートへデータを送る
   async function saveToSheet(name, data) {
     document.getElementById("msg").innerText = "保存中...";
     await fetch(APP_URL, {
@@ -123,6 +120,29 @@
       body: JSON.stringify({ name: name, ...data })
     });
     document.getElementById("msg").innerText = "保存完了";
+  }
+
+  // ★全データリセット用関数
+  async function resetAllZones() {
+    if (!confirm("全ての区画のステータスを「未着手」に戻しますか？")) return;
+    
+    document.getElementById("msg").innerText = "リセット中...";
+    const resetData = { status: 0, start: "", end: "" };
+    
+    // 画面上の全データを先に書き換える
+    zones.forEach(z => { state[z.name] = { ...resetData }; });
+    render();
+
+    // スプレッドシート側の「ALL_RESET」命令を送る（GAS側での対応推奨）
+    // もしくは1つずつ送る場合はループが必要ですが、効率のため1つのリクエストで送る工夫が必要です。
+    // 今回は簡易的に「RESET_SIGNAL」という名前で全クリアをGASに伝えます。
+    await fetch(APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "all_reset" })
+    });
+    
+    document.getElementById("msg").innerText = "リセット完了";
+    loadFromSheet(); // 念のため再読み込み
   }
 
   function getCurrentTime() {
@@ -140,8 +160,8 @@
     else if (z.status === 2 || z.status === 3) { z.end = getCurrentTime(); }
     
     state[name] = z;
-    render(); // 先に画面を変える（体感速度アップ）
-    await saveToSheet(name, z); // 裏でスプレッドシート保存
+    render();
+    await saveToSheet(name, z);
   }
 
   function render() {
@@ -155,8 +175,8 @@
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
         p.setAttribute("fill", STATUS[z.status].color);
-        p.setAttribute("fill-opacity", "0.6");
-        p.setAttribute("stroke", "#fff");
+        p.setAttribute("fill-opacity", z.status === 0 ? "0" : "0.6"); // ★未着手時は完全に透明化
+        p.setAttribute("stroke", z.status === 0 ? "rgba(255,255,255,0.3)" : "#fff"); // ★未着手時は枠線も薄く
         p.setAttribute("stroke-width", "0.2");
         p.style.pointerEvents = "auto";
         p.onclick = (e) => { e.stopPropagation(); toggleStatus(name); };
@@ -183,7 +203,8 @@
       const s = state[z.name] || { status: 0, start: "", end: "" };
       const c = document.createElement("div");
       c.className = "card";
-      c.style.background = STATUS[s.status].color;
+      // ★リストの背景は透明だと見えないので、未着手時は薄いグレーにする
+      c.style.background = s.status === 0 ? "#e0e0e0" : STATUS[s.status].color;
       c.innerHTML = `
         <div class="card-title">${z.name}</div>
         <div class="card-time">開始 ${s.start || '--:--'}<br>完了 ${s.end || '--:--'}</div>
@@ -195,35 +216,11 @@
 
   window.onload = loadFromSheet;
 
-
-
-// --- 自動更新の追加 ---
-// 30秒ごとにスプレッドシートから最新データを読み込む
-setInterval(function() {
-  console.log("30秒経ったので自動更新します");
-  if (typeof loadFromSheet === "function") {
-    loadFromSheet();
-  }
-}, 30000);
-</script>
-
-<script>
-    const mapSvg = document.getElementById('map-svg');
-    if (mapSvg) {
-        mapSvg.addEventListener('click', function(e) {
-            // 地図画像（SVG）の実際の表示サイズを取得
-            const rect = mapSvg.getBoundingClientRect();
-            
-            // クリックした位置を計算（小数点は切り捨て）
-            const x = Math.round(e.clientX - rect.left);
-            const y = Math.round(e.clientY - rect.top);
-
-            // 画面に表示
-            alert("タップした座標: " + x + "," + y);
-            console.log("Coordinate:", x, y);
-        });
+  setInterval(function() {
+    if (typeof loadFromSheet === "function") {
+      loadFromSheet();
     }
+  }, 30000);
 </script>
-  
 </body>
 </html>
