@@ -252,23 +252,25 @@
     }
   }
 
-  async function saveToSheet(name, data) {
-    document.getElementById("msg").innerText = "保存中...";
+ async function saveToSheet(name, data) {
+  document.getElementById("msg").innerText = "保存中...";
 
-    try {
-      await fetch(APP_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, ...data })
-      });
+  try {
+    const res = await fetch(APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ name, ...data })
+    });
 
-      document.getElementById("msg").innerText = "保存完了";
-    } catch (error) {
-      document.getElementById("msg").innerText = "保存エラー";
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status);
     }
+
+    document.getElementById("msg").innerText = "保存完了";
+  } catch (error) {
+    console.error("保存失敗:", error);
+    document.getElementById("msg").innerText = "保存エラー";
   }
+}
 
   async function toggleStatus(name) {
     const z = normalizeZoneState(state[name] || EMPTY_ZONE_STATE);
