@@ -256,38 +256,44 @@
     delete pendingUpdates[name];
   }
 
-  async function loadFromSheet() {
-    if (isLoading || isSaving) return;
+ async function loadFromSheet() {
+  if (isLoading || isSaving) return;
 
-    isLoading = true;
-    document.getElementById("msg").innerText = "同期中...";
+  isLoading = true;
+  document.getElementById("msg").innerText = "同期中...";
 
-    try {
-      const res = await fetch(`${APP_URL}?t=${Date.now()}`, {
-        method: "GET",
-        cache: "no-store"
-      });
+  try {
+    const res = await fetch(`${APP_URL}?t=${Date.now()}`, {
+      method: "GET",
+      cache: "no-store"
+    });
 
-      const text = await res.text();
-      const data = JSON.parse(text || "{}");
-      const merged = { ...state };
+    const text = await res.text();
+    const data = JSON.parse(text || "{}");
+    const merged = { ...state };
 
-      Object.keys(data).forEach(name => {
-        if (!isPending(name)) {
-          merged[name] = data[name];
-        }
-      });
+    Object.keys(data).forEach(name => {
+      if (!isPending(name)) {
+        merged[name] = data[name];
+      }
+    });
 
-      state = merged;
-      render();
-      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
-    } catch (error) {
-      console.error("読込失敗:", error);
-      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
-    } finally {
-      isLoading = false;
-    }
+    state = merged;
+    render();
+    document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
+  } catch (error) {
+    console.error("読込失敗:", error);
+    render();
+    document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
+  } finally {
+    isLoading = false;
   }
+}
+
+window.onload = () => {
+  render();
+  loadFromSheet();
+};
 
   async function saveToSheet(name, data) {
     document.getElementById("msg").innerText = "保存中...";
