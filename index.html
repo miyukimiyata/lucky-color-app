@@ -215,25 +215,26 @@
     "9区G": [[58,31.4],[65.2,27.7],[64.6,30.9],[66.7,31.2],[66.5,32.6],[68.2,32.7],[68.6,30.9],[70.6,31.1],[70.5,32.8],[70.3,34.8],[74,33.6],[73.6,32.8],[74.1,31.4],[75.8,31.6],[76,32.9],[76.9,34.6],[60,39.9],[58.7,32.5],[58,31.5]]
   };
 
-  let state = {};
-  let isLoading = false;
+let state = {};
+let isLoading = false;
+let isSaving = false;
 
-  function getCurrentTime() {
-    const now = new Date();
-    return now.getHours() + ":" + now.getMinutes().toString().padStart(2, "0");
-  }
+function getCurrentTime() {
+  const now = new Date();
+  return now.getHours() + ":" + now.getMinutes().toString().padStart(2, "0");
+}
 
-  function normalizeZoneState(data = {}) {
-    return {
-      status: Number(data.status) || 0,
-      start: data.start || "",
-      tantoEnd: data.tantoEnd || "",
-      yakuinEnd: data.yakuinEnd || "",
-      end: data.end || ""
-    };
-  }
+function normalizeZoneState(data = {}) {
+  return {
+    status: Number(data.status) || 0,
+    start: data.start || "",
+    tantoEnd: data.tantoEnd || "",
+    yakuinEnd: data.yakuinEnd || "",
+    end: data.end || ""
+  };
+}
 
-  async function loadFromSheet() {
+async function loadFromSheet() {
   if (isLoading || isSaving) return;
 
   isLoading = true;
@@ -247,13 +248,13 @@
     render();
     document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
   } catch (error) {
+    console.error("読込失敗:", error);
     document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
   } finally {
     isLoading = false;
   }
 }
-if (isLoading || isSaving) return;
-  
+
 async function saveToSheet(name, data) {
   document.getElementById("msg").innerText = "保存中...";
   isSaving = true;
