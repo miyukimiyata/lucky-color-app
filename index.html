@@ -197,17 +197,25 @@
       layer.appendChild(div);
     });
 
+// --- リスト表示（カード）の生成 ---
     const lv = document.getElementById("listView");
     lv.innerHTML = "";
     zones.forEach(z => {
       const s = state[z.name] || { status: 0, start: "", end: "" };
       const c = document.createElement("div");
       c.className = "card";
-      // ★リストの背景は透明だと見えないので、未着手時は薄いグレーにする
+      
+      // 未着手(0)のときは薄いグレー、それ以外は設定した色
       c.style.background = s.status === 0 ? "#e0e0e0" : STATUS[s.status].color;
+
+      // ステータスに応じて表示を切り替える3段構造
       c.innerHTML = `
         <div class="card-title">${z.name}</div>
-        <div class="card-time">開始 ${s.start || '--:--'}<br>完了 ${s.end || '--:--'}</div>
+        <div class="card-time">
+          <div>🔵 開始：${s.status >= 1 ? (s.start || '確認中') : '--:--'}</div>
+          <div>🟡 担当：${s.status >= 2 ? (s.end || '完了') : '--:--'}</div>
+          <div>🟢 役員：${s.status >= 3 ? '確認済' : '--:--'}</div>
+        </div>
       `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
