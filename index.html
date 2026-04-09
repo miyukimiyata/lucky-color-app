@@ -93,24 +93,51 @@
 
   function render() {
     const lv = document.getElementById("listView");
+    const svg = document.getElementById("map-svg");
     lv.innerHTML = "";
+    svg.innerHTML = "";
+
     zones.forEach(z => {
       const s = state[z.name] || { status: 0, start: "", mid: "", end: "" };
+      
+      // --- 時間の表示を綺麗にする関数 ---
+      const formatTime = (t) => {
+        if (!t || t === "--:--") return "--:--";
+        // ISO形式（1899-12-30T...）や長い文字列から「14:30」のような形式を抽出
+        const match = t.toString().match(/(\d{1,2}:\d{2})/);
+        return match ? match[1] : t;
+      };
+
+      // --- 1. カード（リスト）の生成 ---
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = s.status === 0 ? "#fff" : STATUS[s.status].color;
-      
-      // ここで「3段表示」を作成
       c.innerHTML = `
         <div class="card-title">${z.name}</div>
         <div class="card-time">
-          <div>🔵開始：${s.start || '--:--'}</div>
-          <div>🟡担当：${s.mid || '--:--'}</div>
-          <div>🟢役員：${s.end || '--:--'}</div>
+          <div>🔵開始：${formatTime(s.start)}</div>
+          <div>🟡担当：${formatTime(s.mid)}</div>
+          <div>🟢役員：${formatTime(s.end)}</div>
         </div>
       `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
+
+      // --- 2. 地図（SVG）の描画 ---
+      const color = s.status === 0 ? "rgba(0,0,0,0)" : STATUS[s.status].color;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", z.x);
+      circle.setAttribute("cy", z.y);
+      circle.setAttribute("r", "4"); // 点の大きさ（適宜調整）
+      circle.setAttribute("fill", color);
+      circle.setAttribute("stroke", s.status === 0 ? "#666" : "#fff");
+      circle.setAttribute("stroke-width", "0.5");
+      
+      circle.onclick = (e) => {
+        e.stopPropagation();
+        toggleStatus(z.name);
+      };
+      svg.appendChild(circle);
     });
   }
 
