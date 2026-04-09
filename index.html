@@ -21,7 +21,6 @@
       font-family: sans-serif;
       background: #f0f0f0;
       padding-bottom: 120px;
-      overflow-x: auto;
     }
 
     .container {
@@ -66,7 +65,7 @@
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      touch-action: none;
+      touch-action: pan-y;
     }
 
     .map-inner {
@@ -80,6 +79,9 @@
       width: 100%;
       height: auto;
       display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
     }
 
     #map-svg {
@@ -181,7 +183,7 @@
 </div>
 
 <script>
-  const APP_URL = "https://script.google.com/macros/s/AKfycbxfMBqSQ5F2n8-8od1DZKj__KeUrtKIvDADeB1ghetiJPFRMrEj4PEt7GW3diSSfDUJ/exec";
+  const APP_URL = "ここにGASのexec URLを入れる";
 
   const STATUS = [
     { label: "未着手", color: "#bdbdbd" },
@@ -256,44 +258,39 @@
     delete pendingUpdates[name];
   }
 
- async function loadFromSheet() {
-  if (isLoading || isSaving) return;
+  async function loadFromSheet() {
+    if (isLoading || isSaving) return;
 
-  isLoading = true;
-  document.getElementById("msg").innerText = "同期中...";
+    isLoading = true;
+    document.getElementById("msg").innerText = "同期中...";
 
-  try {
-    const res = await fetch(`${APP_URL}?t=${Date.now()}`, {
-      method: "GET",
-      cache: "no-store"
-    });
+    try {
+      const res = await fetch(`${APP_URL}?t=${Date.now()}`, {
+        method: "GET",
+        cache: "no-store"
+      });
 
-    const text = await res.text();
-    const data = JSON.parse(text || "{}");
-    const merged = { ...state };
+      const text = await res.text();
+      const data = JSON.parse(text || "{}");
+      const merged = { ...state };
 
-    Object.keys(data).forEach(name => {
-      if (!isPending(name)) {
-        merged[name] = data[name];
-      }
-    });
+      Object.keys(data).forEach(name => {
+        if (!isPending(name)) {
+          merged[name] = data[name];
+        }
+      });
 
-    state = merged;
-    render();
-    document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
-  } catch (error) {
-    console.error("読込失敗:", error);
-    render();
-    document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
-  } finally {
-    isLoading = false;
+      state = merged;
+      render();
+      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString();
+    } catch (error) {
+      console.error("読込失敗:", error);
+      render();
+      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
+    } finally {
+      isLoading = false;
+    }
   }
-}
-
-window.onload = () => {
-  render();
-  loadFromSheet();
-};
 
   async function saveToSheet(name, data) {
     document.getElementById("msg").innerText = "保存中...";
@@ -325,6 +322,8 @@ window.onload = () => {
   }
 
   async function toggleStatus(name) {
+    if (scale > 1.02) return;
+
     const z = normalizeZoneState(state[name] || EMPTY_ZONE_STATE);
 
     z.status = (z.status + 1) % 4;
@@ -459,8 +458,9 @@ window.onload = () => {
 
   mapBox.addEventListener("touchstart", (e) => {
     if (e.touches.length === 1) {
-      isDragging = true;
       isPinching = false;
+      isDragging = scale > 1;
+
       startX = e.touches[0].clientX - translateX;
       startY = e.touches[0].clientY - translateY;
     } else if (e.touches.length === 2) {
@@ -472,19 +472,24 @@ window.onload = () => {
   }, { passive: false });
 
   mapBox.addEventListener("touchmove", (e) => {
-    e.preventDefault();
+    if (isPinching && e.touches.length === 2) {
+      e.preventDefault();
 
-    if (isDragging && e.touches.length === 1) {
-      translateX = e.touches[0].clientX - startX;
-      translateY = e.touches[0].clientY - startY;
-      applyTransform();
-    } else if (isPinching && e.touches.length === 2) {
       const currentDistance = getDistance(e.touches[0], e.touches[1]);
       scale = startScale * (currentDistance / initialDistance);
 
       if (scale < 1) scale = 1;
       if (scale > 4) scale = 4;
 
+      applyTransform();
+      return;
+    }
+
+    if (isDragging && e.touches.length === 1 && scale > 1) {
+      e.preventDefault();
+
+      translateX = e.touches[0].clientX - startX;
+      translateY = e.touches[0].clientY - startY;
       applyTransform();
     }
   }, { passive: false });
@@ -499,7 +504,10 @@ window.onload = () => {
     isPinching = false;
   });
 
-  window.onload = loadFromSheet;
+  window.onload = () => {
+    render();
+    loadFromSheet();
+  };
 
   setInterval(() => {
     if (typeof loadFromSheet === "function") {
