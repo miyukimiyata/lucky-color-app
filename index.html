@@ -267,18 +267,21 @@ async function saveToSheet(name, data) {
     });
 
     document.getElementById("msg").innerText = "保存完了";
+
+    // 保存直後に少し待って最新データを再読込
+    setTimeout(() => {
+      isSaving = false;
+      loadFromSheet();
+    }, 800);
+
     return true;
   } catch (error) {
     console.error("保存失敗:", error);
     document.getElementById("msg").innerText = "保存エラー";
+    isSaving = false;
     return false;
-  } finally {
-    setTimeout(() => {
-      isSaving = false;
-    }, 1500);
   }
 }
-
  async function toggleStatus(name) {
   const z = normalizeZoneState(state[name] || EMPTY_ZONE_STATE);
 
