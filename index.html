@@ -256,46 +256,53 @@
   document.getElementById("msg").innerText = "保存中...";
 
   try {
-    const res = await fetch(APP_URL, {
+    await fetch(APP_URL, {
       method: "POST",
+      mode: "no-cors",
       body: JSON.stringify({ name, ...data })
     });
 
-    if (!res.ok) {
-      throw new Error("HTTP " + res.status);
-    }
-
     document.getElementById("msg").innerText = "保存完了";
+    return true;
   } catch (error) {
     console.error("保存失敗:", error);
     document.getElementById("msg").innerText = "保存エラー";
+    return false;
   }
 }
 
-  async function toggleStatus(name) {
-    const z = normalizeZoneState(state[name] || EMPTY_ZONE_STATE);
+ async function toggleStatus(name) {
+  const z = normalizeZoneState(state[name] || EMPTY_ZONE_STATE);
 
-    z.status = (z.status + 1) % 4;
+  z.status = (z.status + 1) % 4;
 
-    if (z.status === 0) {
-      z.start = "";
-      z.tantoEnd = "";
-      z.yakuinEnd = "";
-    } else if (z.status === 1) {
-      z.start = getCurrentTime();
-      z.tantoEnd = "";
-      z.yakuinEnd = "";
-    } else if (z.status === 2) {
-      z.tantoEnd = getCurrentTime();
-    } else if (z.status === 3) {
-      z.yakuinEnd = getCurrentTime();
-    }
-
-    state[name] = z;
-
-    render();
-    await saveToSheet(name, z);
+  if (z.status === 0) {
+    z.start = "";
+    z.tantoEnd = "";
+    z.yakuinEnd = "";
+  } else if (z.status === 1) {
+    z.start = getCurrentTime();
+    z.tantoEnd = "";
+    z.yakuinEnd = "";
+  } else if (z.status === 2) {
+    z.tantoEnd = getCurrentTime();
+  } else if (z.status === 3) {
+    z.yakuinEnd = getCurrentTime();
   }
+
+  state[name] = z;
+
+  // 先に見た目を反映
+  render();
+
+  // 保存はあと
+  const saved = await saveToSheet(name, z);
+
+  // 保存失敗でも見た目は残す
+  if (!saved) {
+    document.getElementById("msg").innerText = "保存エラー（画面表示は反映済み）";
+  }
+}
 
   function renderMap() {
     const svg = document.getElementById("map-svg");
