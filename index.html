@@ -58,32 +58,38 @@
       cursor: pointer;
     }
 
-    .map-container {
-      position: relative;
-      width: 100%;
-      background: #ccc;
-      line-height: 0;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      touch-action: pan-x pan-y pinch-zoom;
-    }
+   .map-container {
+  position: relative;
+  width: 100%;
+  background: #ccc;
+  line-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  touch-action: none;
+}
 
-    .map-image {
-      width: 100%;
-      height: auto;
-      display: auto;
-    }
+.map-inner {
+  position: relative;
+  width: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
 
-    #map-svg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
-      pointer-events: none;
-    }
+.map-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+#map-svg,
+.label-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 
     .label-layer {
       position: absolute;
@@ -163,12 +169,11 @@
   </div>
 
   <div class="map-container" id="mapBox">
+  <div class="map-inner" id="mapInner">
     <img src="map.png" class="map-image" alt="地図">
     <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
     <div class="label-layer" id="labelLayer"></div>
   </div>
-
-  <div class="list-view" id="listView"></div>
 </div>
 
 <script>
@@ -396,6 +401,70 @@ async function saveToSheet(name, data) {
   }
 
   window.onload = loadFromSheet;
+  const mapBox = document.getElementById("mapBox");
+const mapInner = document.getElementById("mapInner");
+
+let scale = 1;
+let startScale = 1;
+let translateX = 0;
+let translateY = 0;
+let startX = 0;
+let startY = 0;
+let initialDistance = 0;
+let isDragging = false;
+let isPinching = false;
+
+function applyTransform() {
+  mapInner.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+
+function getDistance(t1, t2) {
+  const dx = t2.clientX - t1.clientX;
+  const dy = t2.clientY - t1.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+mapBox.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    isPinching = false;
+    startX = e.touches[0].clientX - translateX;
+    startY = e.touches[0].clientY - translateY;
+  } else if (e.touches.length === 2) {
+    isDragging = false;
+    isPinching = true;
+    initialDistance = getDistance(e.touches[0], e.touches[1]);
+    startScale = scale;
+  }
+}, { passive: false });
+
+mapBox.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+
+  if (isDragging && e.touches.length === 1) {
+    translateX = e.touches[0].clientX - startX;
+    translateY = e.touches[0].clientY - startY;
+    applyTransform();
+  } else if (isPinching && e.touches.length === 2) {
+    const currentDistance = getDistance(e.touches[0], e.touches[1]);
+    scale = startScale * (currentDistance / initialDistance);
+
+    if (scale < 1) scale = 1;
+    if (scale > 4) scale = 4;
+
+    applyTransform();
+  }
+}, { passive: false });
+
+mapBox.addEventListener("touchend", () => {
+  if (scale === 1) {
+    translateX = 0;
+    translateY = 0;
+    applyTransform();
+  }
+  isDragging = false;
+  isPinching = false;
+});
 
  setInterval(() => {
   if (typeof loadFromSheet === "function") {
