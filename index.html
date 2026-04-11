@@ -269,56 +269,20 @@
   };
 
   let state = {};
-  let autoRefreshTimer = null;
-  const AUTO_REFRESH_MS = 10000;
 
-  function bindTap(el, handler) {
-    let moved = false;
-
-    el.addEventListener("pointerdown", () => {
-      moved = false;
-    }, { passive: true });
-
-    el.addEventListener("pointermove", () => {
-      moved = true;
-    }, { passive: true });
-
-    el.addEventListener("pointerup", (e) => {
-      if (moved) return;
-      e.preventDefault();
-      e.stopPropagation();
-      handler(e);
-    });
-
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handler(e);
-    });
+  function getCurrentTime() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, "0");
+    const m = String(now.getMinutes()).padStart(2, "0");
+    return `${h}:${m}`;
   }
 
-  function startAutoRefresh() {
-    if (autoRefreshTimer) {
-      clearInterval(autoRefreshTimer);
-    }
-
-    autoRefreshTimer = setInterval(() => {
-      loadFromSheet(true);
-    }, AUTO_REFRESH_MS);
-  }
-
-  async function loadFromSheet(isAuto = false) {
-    if (!isAuto) {
-      document.getElementById("msg").innerText = "同期中...";
-    }
+  async function loadFromSheet() {
+    document.getElementById("msg").innerText = "同期中...";
 
     try {
       const url = APP_URL + (APP_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-
-      const res = await fetch(url, {
-        method: "GET",
-        cache: "no-store"
-      });
+      const res = await fetch(url, { method: "GET", cache: "no-store" });
 
       if (!res.ok) {
         throw new Error("HTTP " + res.status);
@@ -329,9 +293,8 @@
       if (data && typeof data === "object") {
         state = data;
         render();
-
         document.getElementById("msg").innerText =
-          (isAuto ? "自動更新: " : "最終更新: ") +
+          "最終更新: " +
           new Date().toLocaleTimeString("ja-JP", {
             hour: "2-digit",
             minute: "2-digit",
@@ -358,17 +321,8 @@
       throw new Error("保存失敗: HTTP " + res.status);
     }
 
-    const text = await res.text();
-    console.log("save response:", text);
-
+    await res.text();
     document.getElementById("msg").innerText = "保存完了";
-  }
-
-  function getCurrentTime() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, "0");
-    const m = String(now.getMinutes()).padStart(2, "0");
-    return `${h}:${m}`;
   }
 
   async function toggleStatus(name) {
@@ -416,7 +370,8 @@
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.45");
         p.style.pointerEvents = "auto";
-        bindTap(p, () => toggleStatus(name));
+        p.style.cursor = "pointer";
+        p.addEventListener("click", () => toggleStatus(name));
         svg.appendChild(p);
       });
     });
@@ -434,7 +389,7 @@
         <span class="z-name">${z.name}</span>
         <span class="z-status">${STATUS[s.status].label}</span>
       `;
-      bindTap(div, () => toggleStatus(z.name));
+      div.addEventListener("click", () => toggleStatus(z.name));
       layer.appendChild(div);
     });
 
@@ -453,7 +408,7 @@
           完了 ${s.end || "--:--"}
         </div>
       `;
-      bindTap(c, () => toggleStatus(z.name));
+      c.addEventListener("click", () => toggleStatus(z.name));
       lv.appendChild(c);
     });
   }
@@ -461,7 +416,6 @@
   window.onload = () => {
     render();
     loadFromSheet();
-    startAutoRefresh();
   };
 </script>
 </body>
