@@ -3,13 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>廃品回収 リアルタイム共有地図</title>
+  <title>廃品回収 共有管理</title>
   <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       margin: 0;
       padding: 0;
@@ -17,45 +13,16 @@
       background: #f0f0f0;
       overflow-x: hidden;
     }
-
-    body {
-      padding-bottom: 120px;
-    }
-
-    .container {
-      max-width: 100%;
-      margin: 0 auto;
-      padding: 10px;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 1.1rem;
-      margin: 5px 0;
-    }
-
+    body { padding-bottom: 120px; }
+    .container { max-width: 100%; margin: 0 auto; padding: 10px; }
+    h1 { text-align: center; font-size: 1.1rem; margin: 5px 0; }
     .loading-notice {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 8px;
-      min-height: 1.2em;
+      text-align: center; font-size: 0.8rem; color: #666; margin-bottom: 8px; min-height: 1.2em;
     }
-
-    .controls {
-      text-align: center;
-      margin: 10px 0 12px;
-    }
-
+    .controls { text-align: center; margin: 10px 0 12px; }
     .btn-refresh {
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 0.95rem;
-      cursor: pointer;
+      padding: 10px 20px; background: #007bff; color: white; border: none;
+      border-radius: 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer;
     }
 
     .map-container {
@@ -65,7 +32,6 @@
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
-
     .map-stage {
       position: relative;
       width: 100%;
@@ -75,7 +41,6 @@
       overflow: hidden;
       touch-action: manipulation;
     }
-
     .map-image {
       position: absolute;
       inset: 0;
@@ -86,7 +51,6 @@
       -webkit-user-drag: none;
       pointer-events: none;
     }
-
     #map-svg {
       position: absolute;
       inset: 0;
@@ -94,7 +58,6 @@
       height: 100%;
       z-index: 10;
     }
-
     .label-layer {
       position: absolute;
       inset: 0;
@@ -103,7 +66,6 @@
       z-index: 20;
       pointer-events: none;
     }
-
     .zone-label {
       position: absolute;
       transform: translate(-50%, -50%);
@@ -111,9 +73,7 @@
       pointer-events: auto;
       cursor: pointer;
     }
-
-    .z-name,
-    .z-status {
+    .z-name, .z-status {
       display: block;
       color: #000;
       font-weight: bold;
@@ -125,14 +85,8 @@
         1px -1px 0 #fff,
         -1px 1px 0 #fff;
     }
-
-    .z-name {
-      font-size: 0.95rem;
-    }
-
-    .z-status {
-      font-size: 0.72rem;
-    }
+    .z-name { font-size: 0.95rem; }
+    .z-status { font-size: 0.72rem; }
 
     .list-view {
       display: grid;
@@ -140,7 +94,6 @@
       gap: 10px;
       margin-top: 16px;
     }
-
     .card {
       padding: 12px;
       border-radius: 12px;
@@ -150,7 +103,6 @@
       color: #000;
       min-height: 112px;
     }
-
     .card-title {
       font-weight: bold;
       font-size: 0.95rem;
@@ -158,7 +110,6 @@
       margin-bottom: 6px;
       padding-bottom: 4px;
     }
-
     .card-time {
       font-size: 0.8rem;
       line-height: 1.55;
@@ -170,14 +121,14 @@
 
 <div class="container">
   <h1>廃品回収 共有管理</h1>
-  <div class="loading-notice" id="msg">データ読み込み中...</div>
+  <div class="loading-notice" id="msg">地図を表示中...</div>
 
   <div class="controls">
     <button class="btn-refresh" onclick="loadFromSheet()">最新に更新</button>
   </div>
 
   <div class="map-container">
-    <div class="map-stage" id="mapBox">
+    <div class="map-stage">
       <img src="map.png" class="map-image" alt="地図">
       <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
       <div class="label-layer" id="labelLayer"></div>
@@ -226,30 +177,26 @@
 
   let state = {};
 
-  function normalizeZoneState(raw) {
-    const statusNum = Number(raw?.status);
-    const safeStatus = [0,1,2,3].includes(statusNum) ? statusNum : 0;
-
+  function safeZone(raw) {
+    const n = Number(raw && raw.status);
     return {
-      status: safeStatus,
-      start: raw?.start ? String(raw.start) : "",
-      end: raw?.end ? String(raw.end) : ""
+      status: [0,1,2,3].includes(n) ? n : 0,
+      start: raw && raw.start ? String(raw.start) : "",
+      end: raw && raw.end ? String(raw.end) : ""
     };
   }
 
-  function buildSafeState(data) {
-    const safe = {};
-    zones.forEach(zone => {
-      safe[zone.name] = normalizeZoneState(data?.[zone.name] || {});
+  function blankState() {
+    const obj = {};
+    zones.forEach(z => {
+      obj[z.name] = { status: 0, start: "", end: "" };
     });
-    return safe;
+    return obj;
   }
 
   function getCurrentTime() {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2, "0");
-    const m = String(now.getMinutes()).padStart(2, "0");
-    return `${h}:${m}`;
+    return String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
   }
 
   async function loadFromSheet() {
@@ -257,48 +204,45 @@
 
     try {
       const url = APP_URL + (APP_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-      const res = await fetch(url, { method: "GET", cache: "no-store" });
+      const res = await fetch(url, { cache: "no-store" });
 
-      if (!res.ok) {
-        throw new Error("HTTP " + res.status);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const text = await res.text();
+      let data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        throw new Error("JSONで返っていません: " + text.slice(0, 80));
       }
 
-      const data = await res.json();
-      state = buildSafeState(data);
-      render();
+      const nextState = blankState();
+      zones.forEach(z => {
+        nextState[z.name] = safeZone(data[z.name]);
+      });
 
-      document.getElementById("msg").innerText =
-        "最終更新: " +
-        new Date().toLocaleTimeString("ja-JP", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit"
-        });
+      state = nextState;
+      render();
+      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString("ja-JP");
     } catch (e) {
       console.error(e);
-      document.getElementById("msg").innerText = "読込エラー（状態は保持）";
+      document.getElementById("msg").innerText = "読込エラー（地図はそのまま）";
     }
   }
 
   async function saveToSheet(name, data) {
     document.getElementById("msg").innerText = "保存中...";
-
     const res = await fetch(APP_URL, {
       method: "POST",
       body: JSON.stringify({ name, ...data })
     });
-
-    if (!res.ok) {
-      throw new Error("保存失敗: HTTP " + res.status);
-    }
-
+    if (!res.ok) throw new Error("保存失敗: HTTP " + res.status);
     await res.text();
     document.getElementById("msg").innerText = "保存完了";
   }
 
   async function toggleStatus(name) {
-    let z = normalizeZoneState(state[name]);
-
+    let z = safeZone(state[name]);
     z.status = (z.status + 1) % 4;
 
     if (z.status === 0) {
@@ -333,8 +277,8 @@
     lv.innerHTML = "";
 
     Object.keys(polygons).forEach(name => {
+      const z = safeZone(state[name]);
       const data = polygons[name];
-      const z = normalizeZoneState(state[name]);
       const islandList = Array.isArray(data[0][0]) ? data : [data];
 
       islandList.forEach(points => {
@@ -352,40 +296,31 @@
     });
 
     zones.forEach(z => {
-      const s = normalizeZoneState(state[z.name]);
+      const s = safeZone(state[z.name]);
       const div = document.createElement("div");
       div.className = "zone-label";
       div.style.left = z.x + "%";
       div.style.top = z.y + "%";
-      div.innerHTML = `
-        <span class="z-name">${z.name}</span>
-        <span class="z-status">${STATUS[s.status].label}</span>
-      `;
+      div.innerHTML = `<span class="z-name">${z.name}</span><span class="z-status">${STATUS[s.status].label}</span>`;
       div.onclick = () => toggleStatus(z.name);
       layer.appendChild(div);
     });
 
     zones.forEach(z => {
-      const s = normalizeZoneState(state[z.name]);
+      const s = safeZone(state[z.name]);
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = STATUS[s.status].color;
-      c.innerHTML = `
-        <div class="card-title">${z.name}</div>
-        <div class="card-time">
-          開始 ${s.start || "--:--"}<br>
-          完了 ${s.end || "--:--"}
-        </div>
-      `;
+      c.innerHTML = `<div class="card-title">${z.name}</div><div class="card-time">開始 ${s.start || "--:--"}<br>完了 ${s.end || "--:--"}</div>`;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
   }
 
   window.onload = () => {
-    state = buildSafeState({});
+    state = blankState();
     render();
-    loadFromSheet();
+    document.getElementById("msg").innerText = "地図表示OK（更新ボタンで同期）";
   };
 </script>
 </body>
