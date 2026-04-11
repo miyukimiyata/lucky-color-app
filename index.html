@@ -270,42 +270,47 @@
 
   let state = {};
 
-  async function loadFromSheet() {
-    document.getElementById("msg").innerText = "同期中...";
+async function loadFromSheet() {
+  document.getElementById("msg").innerText = "同期中...";
 
-    try {
-      const res = await fetch(APP_URL);
-      state = await res.json();
-      render();
+  try {
+    const res = await fetch(APP_URL);
+    state = await res.json();
+    render();
 
-      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString("ja-JP", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
-    } catch (e) {
-      console.error(e);
-      state = {};
-      render();
-      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
-    }
+    document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+  } catch (e) {
+    console.error(e);
+    document.getElementById("msg").innerText = "読込エラー（状態は保持）";
   }
+}
 
-  async function saveToSheet(name, data) {
-    document.getElementById("msg").innerText = "保存中...";
+ async function saveToSheet(name, data) {
+  document.getElementById("msg").innerText = "保存中...";
 
-    try {
-      await fetch(APP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, ...data })
-      });
-      document.getElementById("msg").innerText = "保存完了";
-    } catch (e) {
-      console.error(e);
-      document.getElementById("msg").innerText = "保存エラー";
+  try {
+    const res = await fetch(APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ name, ...data })
+    });
+
+    if (!res.ok) {
+      throw new Error("保存失敗: HTTP " + res.status);
     }
+
+    const text = await res.text();
+    console.log("save response:", text);
+
+    document.getElementById("msg").innerText = "保存完了";
+  } catch (e) {
+    console.error(e);
+    document.getElementById("msg").innerText = "保存エラー";
   }
+}
 
   function getCurrentTime() {
     const now = new Date();
