@@ -39,6 +39,7 @@
       font-size: 0.8rem;
       color: #666;
       margin-bottom: 8px;
+      min-height: 1.2em;
     }
 
     .controls {
@@ -163,51 +164,6 @@
       line-height: 1.55;
       opacity: 0.9;
     }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 8px;
-      }
-
-      .z-name {
-        font-size: 0.9rem;
-      }
-
-      .z-status {
-        font-size: 0.68rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 1rem;
-      }
-
-      .list-view {
-        gap: 8px;
-      }
-
-      .card {
-        padding: 10px;
-        min-height: 100px;
-      }
-
-      .card-title {
-        font-size: 0.9rem;
-      }
-
-      .card-time {
-        font-size: 0.78rem;
-      }
-
-      .z-name {
-        font-size: 0.84rem;
-      }
-
-      .z-status {
-        font-size: 0.62rem;
-      }
-    }
   </style>
 </head>
 <body>
@@ -270,6 +226,25 @@
 
   let state = {};
 
+  function normalizeZoneState(raw) {
+    const statusNum = Number(raw?.status);
+    const safeStatus = [0,1,2,3].includes(statusNum) ? statusNum : 0;
+
+    return {
+      status: safeStatus,
+      start: raw?.start ? String(raw.start) : "",
+      end: raw?.end ? String(raw.end) : ""
+    };
+  }
+
+  function buildSafeState(data) {
+    const safe = {};
+    zones.forEach(zone => {
+      safe[zone.name] = normalizeZoneState(data?.[zone.name] || {});
+    });
+    return safe;
+  }
+
   function getCurrentTime() {
     const now = new Date();
     const h = String(now.getHours()).padStart(2, "0");
@@ -289,20 +264,16 @@
       }
 
       const data = await res.json();
+      state = buildSafeState(data);
+      render();
 
-      if (data && typeof data === "object") {
-        state = data;
-        render();
-        document.getElementById("msg").innerText =
-          "最終更新: " +
-          new Date().toLocaleTimeString("ja-JP", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-          });
-      } else {
-        throw new Error("JSON形式が不正です");
-      }
+      document.getElementById("msg").innerText =
+        "最終更新: " +
+        new Date().toLocaleTimeString("ja-JP", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
     } catch (e) {
       console.error(e);
       document.getElementById("msg").innerText = "読込エラー（状態は保持）";
@@ -326,9 +297,7 @@
   }
 
   async function toggleStatus(name) {
-     console.log("toggle", name);
-    let z = state[name];
-    if (!z) z = { status: 0, start: "", end: "" };
+    let z = normalizeZoneState(state[name]);
 
     z.status = (z.status + 1) % 4;
 
@@ -338,7 +307,7 @@
     } else if (z.status === 1) {
       z.start = getCurrentTime();
       z.end = "";
-    } else if (z.status === 2 || z.status === 3) {
+    } else {
       if (!z.start) z.start = getCurrentTime();
       z.end = getCurrentTime();
     }
@@ -356,11 +325,16 @@
 
   function render() {
     const svg = document.getElementById("map-svg");
+    const layer = document.getElementById("labelLayer");
+    const lv = document.getElementById("listView");
+
     svg.innerHTML = "";
+    layer.innerHTML = "";
+    lv.innerHTML = "";
 
     Object.keys(polygons).forEach(name => {
       const data = polygons[name];
-      const z = state[name] || { status: 0 };
+      const z = normalizeZoneState(state[name]);
       const islandList = Array.isArray(data[0][0]) ? data : [data];
 
       islandList.forEach(points => {
@@ -370,18 +344,15 @@
         p.setAttribute("fill-opacity", z.status === 3 ? "0.85" : "0.6");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.45");
-        p.style.pointerEvents = "all";
+        p.setAttribute("pointer-events", "all");
         p.style.cursor = "pointer";
-       p.onclick = () => toggleStatus(name);
+        p.onclick = () => toggleStatus(name);
         svg.appendChild(p);
       });
     });
 
-    const layer = document.getElementById("labelLayer");
-    layer.innerHTML = "";
-
     zones.forEach(z => {
-      const s = state[z.name] || { status: 0 };
+      const s = normalizeZoneState(state[z.name]);
       const div = document.createElement("div");
       div.className = "zone-label";
       div.style.left = z.x + "%";
@@ -390,15 +361,12 @@
         <span class="z-name">${z.name}</span>
         <span class="z-status">${STATUS[s.status].label}</span>
       `;
-    div.onclick = () => toggleStatus(z.name);
+      div.onclick = () => toggleStatus(z.name);
       layer.appendChild(div);
     });
 
-    const lv = document.getElementById("listView");
-    lv.innerHTML = "";
-
     zones.forEach(z => {
-      const s = state[z.name] || { status: 0, start: "", end: "" };
+      const s = normalizeZoneState(state[z.name]);
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = STATUS[s.status].color;
@@ -415,6 +383,7 @@
   }
 
   window.onload = () => {
+    state = buildSafeState({});
     render();
     loadFromSheet();
   };
