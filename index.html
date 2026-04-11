@@ -54,26 +54,32 @@
       border-radius: 20px;
       font-weight: bold;
       font-size: 0.95rem;
+      cursor: pointer;
     }
 
     .map-container {
-      position: relative;
       width: 100%;
-      height: 78dvh;
-      min-height: 420px;
-      max-height: 860px;
       background: #ccc;
-      line-height: 0;
       border-radius: 14px;
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .map-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 750 / 1334; /* 必要なら後で微調整 */
+      min-height: 340px;
+      line-height: 0;
+      overflow: hidden;
       touch-action: manipulation;
     }
 
     .map-image {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
       display: block;
       user-select: none;
       -webkit-user-drag: none;
@@ -163,12 +169,6 @@
         padding: 8px;
       }
 
-      .map-container {
-        height: 74dvh;
-        min-height: 380px;
-        border-radius: 12px;
-      }
-
       .z-name {
         font-size: 0.9rem;
       }
@@ -181,11 +181,6 @@
     @media (max-width: 480px) {
       h1 {
         font-size: 1rem;
-      }
-
-      .map-container {
-        height: 70dvh;
-        min-height: 340px;
       }
 
       .list-view {
@@ -225,17 +220,19 @@
     <button class="btn-refresh" onclick="loadFromSheet()">最新に更新</button>
   </div>
 
-  <div class="map-container" id="mapBox">
-    <img src="map.png" class="map-image" alt="地図">
-    <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-    <div class="label-layer" id="labelLayer"></div>
+  <div class="map-container">
+    <div class="map-stage" id="mapBox">
+      <img src="map.png" class="map-image" alt="地図">
+      <svg id="map-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+      <div class="label-layer" id="labelLayer"></div>
+    </div>
   </div>
 
   <div class="list-view" id="listView"></div>
 </div>
 
 <script>
-  const APP_URL = "https://script.google.com/macros/s/AKfycbwXs6JkR_Gx8DPn3Kv9b60ZNgIf3L42P2Q-g3HtVhMaf6qwCJHf9JVCGaq2K-refEMY/exec";
+  const APP_URL = "ここにGASのURLを貼る";
 
   const STATUS = [
     { label: "未着手", color: "#bdbdbd" },
@@ -275,23 +272,28 @@
 
   async function loadFromSheet() {
     document.getElementById("msg").innerText = "同期中...";
+
     try {
       const res = await fetch(APP_URL);
       state = await res.json();
       render();
+
       document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString("ja-JP", {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit"
       });
     } catch (e) {
-      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
       console.error(e);
+      state = {};
+      render();
+      document.getElementById("msg").innerText = "読込エラー（URLを確認してください）";
     }
   }
 
   async function saveToSheet(name, data) {
     document.getElementById("msg").innerText = "保存中...";
+
     try {
       await fetch(APP_URL, {
         method: "POST",
@@ -300,8 +302,8 @@
       });
       document.getElementById("msg").innerText = "保存完了";
     } catch (e) {
-      document.getElementById("msg").innerText = "保存エラー";
       console.error(e);
+      document.getElementById("msg").innerText = "保存エラー";
     }
   }
 
@@ -331,7 +333,12 @@
 
     state[name] = z;
     render();
-    await saveToSheet(name, z);
+
+    try {
+      await saveToSheet(name, z);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function render() {
@@ -399,10 +406,10 @@
     });
   }
 
- window.onload = () => {
-  render();         // まず空データでも表示
-  loadFromSheet();  // そのあと同期
-};
+  window.onload = () => {
+    render();
+    loadFromSheet();
+  };
 </script>
 </body>
 </html>
