@@ -68,7 +68,7 @@
     .map-stage {
       position: relative;
       width: 100%;
-      aspect-ratio: 750 / 1334; /* 必要なら後で微調整 */
+      aspect-ratio: 750 / 1334;
       min-height: 340px;
       line-height: 0;
       overflow: hidden;
@@ -270,29 +270,70 @@
 
   let state = {};
 
-async function loadFromSheet() {
-  document.getElementById("msg").innerText = "同期中...";
+  function bindTap(el, handler) {
+    let moved = false;
 
-  try {
-    const res = await fetch(APP_URL);
-    state = await res.json();
-    render();
+    el.addEventListener("pointerdown", () => {
+      moved = false;
+    }, { passive: true });
 
-    document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString("ja-JP", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
+    el.addEventListener("pointermove", () => {
+      moved = true;
+    }, { passive: true });
+
+    el.addEventListener("pointerup", (e) => {
+      if (moved) return;
+      e.preventDefault();
+      e.stopPropagation();
+      handler(e);
     });
-  } catch (e) {
-    console.error(e);
-    document.getElementById("msg").innerText = "読込エラー（状態は保持）";
+
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handler(e);
+    });
   }
-}
 
- async function saveToSheet(name, data) {
-  document.getElementById("msg").innerText = "保存中...";
+  async function loadFromSheet() {
+    document.getElementById("msg").innerText = "同期中...";
 
-  try {
+    try {
+      const url = APP_URL + (APP_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+
+      const res = await fetch(url, {
+        method: "GET",
+        cache: "no-store"
+      });
+
+      if (!res.ok) {
+        throw new Error("HTTP " + res.status);
+      }
+
+      const data = await res.json();
+
+      if (data && typeof data === "object") {
+        state = data;
+        render();
+        document.getElementById("msg").innerText =
+          "最終更新: " +
+          new Date().toLocaleTimeString("ja-JP", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          });
+      } else {
+        throw new Error("JSON形式が不正です");
+      }
+    } catch (e) {
+      console.error(e);
+      document.getElementById("msg").innerText = "読込エラー（状態は保持）";
+    }
+  }
+
+  async function saveToSheet(name, data) {
+    document.getElementById("msg").innerText = "保存中...";
+
     const res = await fetch(APP_URL, {
       method: "POST",
       body: JSON.stringify({ name, ...data })
@@ -306,11 +347,7 @@ async function loadFromSheet() {
     console.log("save response:", text);
 
     document.getElementById("msg").innerText = "保存完了";
-  } catch (e) {
-    console.error(e);
-    document.getElementById("msg").innerText = "保存エラー";
   }
-}
 
   function getCurrentTime() {
     const now = new Date();
@@ -343,6 +380,7 @@ async function loadFromSheet() {
       await saveToSheet(name, z);
     } catch (e) {
       console.error(e);
+      document.getElementById("msg").innerText = "保存エラー（画面表示は維持）";
     }
   }
 
@@ -363,10 +401,7 @@ async function loadFromSheet() {
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.45");
         p.style.pointerEvents = "auto";
-        p.addEventListener("click", (e) => {
-          e.stopPropagation();
-          toggleStatus(name);
-        });
+        bindTap(p, () => toggleStatus(name));
         svg.appendChild(p);
       });
     });
@@ -384,10 +419,7 @@ async function loadFromSheet() {
         <span class="z-name">${z.name}</span>
         <span class="z-status">${STATUS[s.status].label}</span>
       `;
-      div.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleStatus(z.name);
-      });
+      bindTap(div, () => toggleStatus(z.name));
       layer.appendChild(div);
     });
 
@@ -406,7 +438,7 @@ async function loadFromSheet() {
           完了 ${s.end || "--:--"}
         </div>
       `;
-      c.addEventListener("click", () => toggleStatus(z.name));
+      bindTap(c, () => toggleStatus(z.name));
       lv.appendChild(c);
     });
   }
