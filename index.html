@@ -223,12 +223,23 @@
     });
   }
 
+// --- 更新間隔の設定（ミリ秒） ---
+  const UPDATE_INTERVAL = 10000; // 10秒
+
   window.onload = () => {
     state = blankState();
     render();
     loadFromSheet();
-    // 30秒ごとに自動更新
-    setInterval(loadFromSheet, 30000); 
+    
+    // 定期実行
+    setInterval(() => {
+      // 最後に操作してから15秒以上経っている場合のみ自動更新を実行
+      // (操作中の上書きを完全に防ぐため、更新間隔より少し長めに設定)
+      const idleTime = Date.now() - lastUserActionTime;
+      if (idleTime > 15000) {
+        loadFromSheet();
+      }
+    }, UPDATE_INTERVAL); 
   };
 </script>
 </body>
