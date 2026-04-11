@@ -235,7 +235,7 @@
 </div>
 
 <script>
-  const APP_URL = "https://script.google.com/macros/s/AKfycbxfMBqSQ5F2n8-8od1DZKj__KeUrtKIvDADeB1ghetiJPFRMrEj4PEt7GW3diSSfDUJ/exec";
+  const APP_URL = "https://script.google.com/macros/s/AKfycbxvc9GbeQjdOzTciACu9bSPizc4bSvqg87cktYLUPd-zTeqAvb4LA0J2gwDxKl9-j0/exec";
 
   const STATUS = [
     { label: "未着手", color: "#bdbdbd" },
@@ -399,7 +399,10 @@
     });
   }
 
-  window.onload = loadFromSheet;
+ window.onload = () => {
+  render();         // まず空データでも表示
+  loadFromSheet();  // そのあと同期
+};
 </script>
 </body>
 </html>
