@@ -329,6 +329,17 @@ c.innerHTML = `
     render();
     document.getElementById("msg").innerText = "地図表示OK（更新ボタンで同期）";
   };
+
+
+  // --- 自動更新の追加 ---
+// 30秒ごとにスプレッドシートから最新データを読み込む
+setInterval(function() {
+  console.log("10秒経ったので自動更新します");
+  if (typeof loadFromSheet === "function") {
+    loadFromSheet();
+  }
+}, 10000);
+
 </script>
 </body>
 </html>
