@@ -5,28 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>廃品回収 共有管理</title>
   <style>
-    /* CSSはそのまま維持 */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; padding: 0; font-family: sans-serif; background: #f0f0f0; overflow-x: hidden; }
+    html, body {
+      margin: 0; padding: 0; font-family: sans-serif; background: #f0f0f0; overflow-x: hidden;
+    }
     body { padding-bottom: 120px; }
     .container { max-width: 100%; margin: 0 auto; padding: 10px; }
     h1 { text-align: center; font-size: 1.1rem; margin: 5px 0; }
-    .loading-notice { text-align: center; font-size: 0.8rem; color: #666; margin-bottom: 8px; min-height: 1.2em; }
+    .loading-notice {
+      text-align: center; font-size: 0.8rem; color: #666; margin-bottom: 8px; min-height: 1.2em;
+    }
     .controls { text-align: center; margin: 10px 0 12px; }
-    .btn-refresh { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
-    .map-container { width: 100%; background: #ccc; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .map-stage { position: relative; width: 100%; aspect-ratio: 750 / 1334; min-height: 340px; line-height: 0; overflow: hidden; touch-action: manipulation; }
-    .map-image { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
-    #map-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; }
-    .label-layer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
-    .zone-label { position: absolute; transform: translate(-50%, -50%); text-align: center; pointer-events: auto; cursor: pointer; }
-    .z-name, .z-status { display: block; color: #000; font-weight: bold; white-space: nowrap; line-height: 1.08; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; }
+    .btn-refresh {
+      padding: 10px 20px; background: #007bff; color: white; border: none;
+      border-radius: 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer;
+    }
+    .map-container {
+      width: 100%; background: #ccc; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;
+    }
+    .map-stage {
+      position: relative; width: 100%; aspect-ratio: 750 / 1334;
+      min-height: 340px; line-height: 0; overflow: hidden; touch-action: manipulation;
+    }
+    .map-image {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      display: block; user-select: none; -webkit-user-drag: none; pointer-events: none;
+    }
+    #map-svg {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10;
+    }
+    .label-layer {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none;
+    }
+    .zone-label {
+      position: absolute; transform: translate(-50%, -50%); text-align: center;
+      pointer-events: auto; cursor: pointer;
+    }
+    .z-name, .z-status {
+      display: block; color: #000; font-weight: bold; white-space: nowrap;
+      line-height: 1.08; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+    }
     .z-name { font-size: 0.95rem; }
     .z-status { font-size: 0.72rem; }
-    .list-view { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
-    .card { padding: 12px; border-radius: 12px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000; min-height: 112px; }
-    .card-title { font-weight: bold; font-size: 0.95rem; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 6px; padding-bottom: 4px; }
-    .card-time { font-size: 0.8rem; line-height: 1.55; opacity: 0.9; }
+    .list-view {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px; margin-top: 16px;
+    }
+    .card {
+      padding: 12px; border-radius: 12px; text-align: left;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: #000; min-height: 112px;
+    }
+    .card-title {
+      font-weight: bold; font-size: 0.95rem; border-bottom: 1px solid rgba(0,0,0,0.08);
+      margin-bottom: 6px; padding-bottom: 4px;
+    }
+    .card-time { font-size: 0.75rem; line-height: 1.4; opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -60,25 +94,49 @@
     { label: "役員完了", color: "#66bb6a" }
   ];
 
-  // 各区画の座標データ（省略せずそのままお使いください）
-  const zones = [{ name: "1区", x: 60, y: 58 }, { name: "1区A", x: 60, y: 45 }, { name: "1区B", x: 82, y: 45 },{ name: "2区", x: 35, y: 58 }, { name: "3区", x: 55, y: 75 }, { name: "4区", x: 60, y: 82 },{ name: "5区", x: 55, y: 92 }, { name: "7区", x: 42, y: 95 }, { name: "8区", x: 40, y: 83 },{ name: "9区A", x: 18, y: 19 }, { name: "9区B", x: 18, y: 43 }, { name: "9区C", x: 40, y: 10 },{ name: "9区D", x: 50, y: 22 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 67, y: 34 }];
-  const polygons = { /* ...以前のコードと同じポリゴンデータが入る... */ };
+  const zones = [
+    { name: "1区", x: 60, y: 58 }, { name: "1区A", x: 60, y: 45 }, { name: "1区B", x: 82, y: 45 },
+    { name: "2区", x: 35, y: 58 }, { name: "3区", x: 55, y: 75 }, { name: "4区", x: 60, y: 82 },
+    { name: "5区", x: 55, y: 92 }, { name: "7区", x: 42, y: 95 }, { name: "8区", x: 40, y: 83 },
+    { name: "9区A", x: 18, y: 19 }, { name: "9区B", x: 18, y: 43 }, { name: "9区C", x: 40, y: 10 },
+    { name: "9区D", x: 50, y: 22 }, { name: "9区E", x: 38, y: 35 }, { name: "9区F", x: 52, y: 33 }, { name: "9区G", x: 67, y: 34 }
+  ];
+
+  const polygons = {
+    "1区": [[49.6,49.1],[54.9,48.6],[55.1,51.6],[58.6,51.5],[58.9,55.1],[60.8,54.7],[60.7,55.7],[64.8,55.7],[64.5,56.7],[66.3,56.5],[67.6,60.8],[69.6,60.7],[70.5,64.7],[71.4,64.6],[71.7,66.4],[72.6,66.6],[72.6,67.1],[70.1,67.2],[70.2,70],[66.4,70.2],[66.7,72.8],[64.6,73],[64.8,71.9],[63.7,72],[64,73.1],[63,73.2],[62.8,72],[61.1,72.2],[61.1,72.8],[59.9,72.8],[60.2,71.6],[56.7,71.2],[56.9,68.8],[54.5,68.5],[54.8,65.8],[53.3,65.7],[53.3,64.4],[51.6,64.4],[52.2,59.1],[51.3,59.1],[49.8,49.1]],
+    "1区A": [[45.1,44.2],[69,37.3],[71.4,50.3],[71,51.3],[71.7,53.2],[68.9,53.7],[70.1,55.8],[68.4,56.1],[68.3,55.6],[66.1,55.6],[66.4,56.5],[64.8,56.5],[64.8,55.7],[60.5,55.6],[60.8,54.5],[59.2,55.2],[58.6,51.5],[55.1,51.8],[54.6,48.7],[49,49.3],[48.3,46.1],[46.2,46.7],[45.1,44.2]],
+    "1区B": [[69,37.2],[86,31.9],[93.8,38],[96.2,46],[92.8,52.6],[91,52.3],[90.8,52.9],[92.2,53.4],[87.9,56.5],[82.9,53.6],[84.1,52.8],[79.3,50.5],[78.7,51.8],[80.5,52.9],[81.1,57.3],[78.1,56.9],[78.1,55.6],[80.7,56.1],[80.1,53.2],[78.4,53.3],[78.1,53.6],[77.2,58.1],[77.5,59.1],[73.8,58.9],[74,58.1],[76.9,58.1],[78.2,53.4],[73.2,52.7],[73.7,51.3],[75.8,51.7],[75.8,51.2],[77.3,49.7],[75.1,47.8],[73.7,50.5],[71.6,50.3],[69,37.2]],
+    "2区": [[7.7,50.3],[16.8,51],[26,50.1],[42.8,45],[42.8,46.7],[41.2,46.8],[41.2,48.3],[36,56.7],[39.2,57.5],[38.3,58.7],[52.1,59.3],[52.1,64.5],[53.3,64.3],[53.4,65.7],[54.8,65.5],[55.1,68.6],[56.7,68.9],[56.9,71.2],[49.9,70.6],[49.8,71.6],[47.8,71.2],[48,70.3],[44.3,69.9],[43.3,71.5],[44.2,71.8],[43,73.4],[30.6,73.2],[30.3,68.4],[26,69.1],[23.6,69],[26.3,59.5],[17.1,57.9],[16.5,52.8],[7.4,52.8],[8,50.5]],
+    "3区": [[44.3,70],[47.9,70.4],[47.8,71.1],[49.4,71.4],[49.7,70.7],[60,71.4],[59.9,72.5],[61.2,72.7],[61.1,71.8],[62.9,71.8],[62.6,72.7],[63.7,72.8],[63.7,71.9],[64.6,71.8],[65,76.4],[63.6,76.6],[63.4,76.3],[62.1,76.5],[62.1,77.5],[61.7,78.7],[63.1,78.5],[63.3,80.6],[59.5,80.1],[59.1,80.5],[57.8,80.2],[58.3,79.6],[56.4,78.9],[55.4,79.6],[53.2,78.4],[52.3,79.3],[42.5,73.6],[43.7,72],[42.9,71.5],[44.7,69.8]],
+    "4区": [[66.4,70.3],[69.8,70],[70.1,74.8],[66.7,81],[64.4,86.6],[61.7,86],[61.1,86.6],[58.9,85.9],[58.9,84.5],[56.2,83.8],[55.8,85.7],[53.2,85.1],[54.6,81.3],[52.1,79.4],[53.4,78.5],[54.6,78.8],[54.7,79.4],[55.7,79.7],[56.5,78.8],[57,79.1],[56.8,79.5],[58,79.8],[57.7,80.1],[59.1,80.4],[59.3,79.7],[63,80.4],[63.3,78.6],[61.7,78.9],[62.2,77.9],[61.8,76.7],[63.1,76.4],[63.3,76.7],[65.5,76.7],[65.2,72.7],[66.5,72.7],[66.3,70.1]],
+    "5区": [[53.2,85.2],[55.5,85.8],[56.4,83.9],[59.3,84.7],[58.9,85.9],[60.8,86.4],[61.4,85.9],[63.8,86.5],[62.7,93.2],[63.1,99.8],[46.7,98.8],[53.2,85.4]],
+    "7区": [[39.6,92.6],[46.3,92.7],[44,98.6],[38.5,97.5]],
+    "8区": [[30.8,73.1],[42.5,73.5],[54.6,81.3],[49.2,93.4],[47.1,92.1],[30,91.6],[30.4,73.7]],
+    "9区A": [[4.5,0.1],[23.1,0.1],[31,25.9],[29.1,36.4],[7.1,36.9],[4.6,0.2]],
+    "9区B": [[7.1,36.9],[29.1,36.4],[28.5,43],[29.1,48.7],[19.4,50.8],[7.9,50.8],[7.6,37.4]],
+    "9区C": [[23.4,0.2],[39.1,0.5],[44.5,6.7],[56.5,19],[36.4,20],[34.1,23.6],[30,22.3],[23.5,0]],
+    "9区D": [[33.9,23.6],[36.3,20],[52.7,19.1],[56.5,19.1],[61.1,21.8],[66.1,24.4],[65.5,27.7],[57.8,31.5],[53,27.7],[51.9,28],[49.4,25],[41.4,28.2],[36.7,24.6],[34.2,23.7]],
+    "9区E": [[30,22.6],[33.6,23.8],[36.6,24.8],[41.3,28.2],[47.4,34.8],[49.6,42.8],[29.1,48.8],[28.5,41.9],[29.4,36.7],[30.1,31.1],[30.9,26.3],[30.1,22.4]],
+    "9区F": [[41.7,28.2],[49.6,24.9],[52.1,27.9],[52.8,27.5],[57.8,31.3],[58.7,32.4],[59.8,39.6],[49.8,42.8],[47.5,35],[41.8,28.2]],
+    "9区G": [[58,31.4],[65.2,27.7],[64.6,30.9],[66.7,31.2],[66.5,32.6],[68.2,32.7],[68.6,30.9],[70.6,31.1],[70.5,32.8],[70.3,34.8],[74,33.6],[73.6,32.8],[74.1,31.4],[75.8,31.6],[76,32.9],[76.9,34.6],[60,39.9],[58.7,32.5],[58,31.5]]
+  };
 
   let state = {};
-  let pendingChanges = {}; // 自分が今操作した内容を一時保存する場所
+  let pendingChanges = {};
 
   function safeZone(raw) {
     const n = Number(raw && raw.status);
     return {
       status: [0,1,2,3].includes(n) ? n : 0,
       start: raw && raw.start ? String(raw.start) : "",
-      end: raw && raw.end ? String(raw.end) : ""
+      tantoEnd: raw && raw.tantoEnd ? String(raw.tantoEnd) : "",
+      yakuinEnd: raw && raw.yakuinEnd ? String(raw.yakuinEnd) : ""
     };
   }
 
   function blankState() {
     const obj = {};
-    zones.forEach(z => { obj[z.name] = { status: 0, start: "", end: "" }; });
+    zones.forEach(z => { obj[z.name] = { status: 0, start: "", tantoEnd: "", yakuinEnd: "" }; });
     return obj;
   }
 
@@ -87,9 +145,14 @@
     return String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
   }
 
+  function manualRefresh() {
+    pendingChanges = {}; // ロック強制解除
+    loadFromSheet();
+  }
+
   async function loadFromSheet() {
     try {
-      const url = `${APP_URL}?t=${Date.now()}`;
+      const url = `${APP_URL}?t=${Date.now()}_${Math.random()}`;
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) return;
 
@@ -97,50 +160,50 @@
       const now = Date.now();
 
       zones.forEach(z => {
-        // 自分が操作してから60秒以内の区画は、スプレッドシートのデータ（古い可能性がある）を無視する
+        // 自分が操作して60秒間は、自分の画面を優先（GASの反映遅れ対策）
         if (pendingChanges[z.name] && (now - pendingChanges[z.name].time < 60000)) {
           state[z.name] = pendingChanges[z.name].data;
         } else {
           state[z.name] = safeZone(data[z.name]);
-          if (pendingChanges[z.name]) delete pendingChanges[z.name]; // 60秒過ぎたら解除
+          if (pendingChanges[z.name]) delete pendingChanges[z.name];
         }
       });
-
       render();
-      document.getElementById("msg").innerText = "自動更新中: " + new Date().toLocaleTimeString("ja-JP");
+      document.getElementById("msg").innerText = "最終更新: " + new Date().toLocaleTimeString("ja-JP");
     } catch (e) {
-      console.log("Sync delay...");
+      document.getElementById("msg").innerText = "更新待機中...";
     }
   }
 
   async function toggleStatus(name) {
     let z = safeZone(state[name]);
     z.status = (z.status + 1) % 4;
+    const time = getCurrentTime();
 
-    if (z.status === 0) { z.start = ""; z.end = ""; }
-    else if (z.status === 1) { z.start = getCurrentTime(); z.end = ""; }
-    else { if (!z.start) z.start = getCurrentTime(); z.end = getCurrentTime(); }
+    if (z.status === 0) { z.start = ""; z.tantoEnd = ""; z.yakuinEnd = ""; }
+    else if (z.status === 1) { z.start = time; }
+    else if (z.status === 2) { z.tantoEnd = time; }
+    else if (z.status === 3) { z.yakuinEnd = time; }
 
-    // 1. 自分の「今やった操作」を記録（これが最優先される）
+    // 手元の画面を即座に変え、60秒間の同期ロックをかける
     pendingChanges[name] = { data: { ...z }, time: Date.now() };
     state[name] = z; 
-    
-    render(); // 即座に画面を変える
+    render();
 
-    document.getElementById("msg").innerText = "保存中...";
+    document.getElementById("msg").innerText = "送信中...";
     try {
-      await fetch(APP_URL, {
+      // no-corsで即座に送信
+      fetch(APP_URL, {
         method: "POST",
-        mode: "no-cors", // 高速化のためレスポンスを待たない設定
+        mode: "no-cors",
         body: JSON.stringify({ name, ...z })
       });
-      document.getElementById("msg").innerText = "保存指示OK";
+      setTimeout(() => { document.getElementById("msg").innerText = "保存指示OK (自画面ロック中)"; }, 500);
     } catch (e) {
-      document.getElementById("msg").innerText = "通信不安定";
+      document.getElementById("msg").innerText = "保存エラー";
     }
   }
 
-  // --- render 関数の中身は以前と同じ ---
   function render() {
     const svg = document.getElementById("map-svg");
     const layer = document.getElementById("labelLayer");
@@ -149,17 +212,22 @@
 
     svg.innerHTML = ""; layer.innerHTML = ""; lv.innerHTML = "";
 
-    // ポリゴン描画
+    // 地図ポリゴン描画
     Object.keys(polygons).forEach(name => {
       const z = safeZone(state[name]);
-      const islandList = Array.isArray(polygons[name][0][0]) ? polygons[name] : [polygons[name]];
+      const data = polygons[name];
+      const islandList = Array.isArray(data[0][0]) ? data : [data];
+
       islandList.forEach(points => {
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
         p.setAttribute("fill", STATUS[z.status].color);
-        p.setAttribute("fill-opacity", z.status === 0 ? "0.2" : "0.8");
+        // 未着手(0)の時は少し薄く、それ以外は濃く
+        p.setAttribute("fill-opacity", z.status === 0 ? "0.3" : "0.85");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.4");
+        p.setAttribute("pointer-events", "all");
+        p.style.cursor = "pointer";
         p.onclick = (e) => { e.stopPropagation(); toggleStatus(name); };
         svg.appendChild(p);
       });
@@ -168,6 +236,7 @@
     // ラベルとカード
     zones.forEach(z => {
       const s = safeZone(state[z.name]);
+      
       const div = document.createElement("div");
       div.className = "zone-label";
       div.style.left = z.x + "%"; div.style.top = z.y + "%";
@@ -178,7 +247,14 @@
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = STATUS[s.status].color;
-      c.innerHTML = `<div class="card-title">${z.name}</div><div class="card-time">開始 ${s.start || "--:--"}<br>完了 ${s.end || "--:--"}</div>`;
+      c.innerHTML = `
+        <div class="card-title">${z.name} (${STATUS[s.status].label})</div>
+        <div class="card-time">
+          開始 ${s.start || "--:--"}<br>
+          担当完了 ${s.tantoEnd || "--:--"}<br>
+          役員完了 ${s.yakuinEnd || "--:--"}
+        </div>
+      `;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
@@ -188,7 +264,7 @@
     state = blankState();
     render();
     loadFromSheet();
-    setInterval(loadFromSheet, 5000); // 更新間隔を5秒に短縮
+    setInterval(loadFromSheet, 8000); // 8秒おきに最新チェック
   };
 </script>
 </body>
