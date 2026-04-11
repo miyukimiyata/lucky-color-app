@@ -269,6 +269,8 @@
   };
 
   let state = {};
+  let autoRefreshTimer = null;
+  const AUTO_REFRESH_MS = 10000;
 
   function bindTap(el, handler) {
     let moved = false;
@@ -295,8 +297,20 @@
     });
   }
 
-  async function loadFromSheet() {
-    document.getElementById("msg").innerText = "同期中...";
+  function startAutoRefresh() {
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+    }
+
+    autoRefreshTimer = setInterval(() => {
+      loadFromSheet(true);
+    }, AUTO_REFRESH_MS);
+  }
+
+  async function loadFromSheet(isAuto = false) {
+    if (!isAuto) {
+      document.getElementById("msg").innerText = "同期中...";
+    }
 
     try {
       const url = APP_URL + (APP_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
@@ -315,8 +329,9 @@
       if (data && typeof data === "object") {
         state = data;
         render();
+
         document.getElementById("msg").innerText =
-          "最終更新: " +
+          (isAuto ? "自動更新: " : "最終更新: ") +
           new Date().toLocaleTimeString("ja-JP", {
             hour: "2-digit",
             minute: "2-digit",
@@ -397,7 +412,7 @@
         const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         p.setAttribute("points", points.map(pt => pt.join(",")).join(" "));
         p.setAttribute("fill", STATUS[z.status].color);
-        p.setAttribute("fill-opacity", "0.6");
+        p.setAttribute("fill-opacity", z.status === 3 ? "0.85" : "0.6");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.45");
         p.style.pointerEvents = "auto";
@@ -446,6 +461,7 @@
   window.onload = () => {
     render();
     loadFromSheet();
+    startAutoRefresh();
   };
 </script>
 </body>
