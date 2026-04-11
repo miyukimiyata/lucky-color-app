@@ -370,7 +370,7 @@
         p.setAttribute("fill-opacity", z.status === 3 ? "0.85" : "0.6");
         p.setAttribute("stroke", "#fff");
         p.setAttribute("stroke-width", "0.45");
-        p.style.pointerEvents = "auto";
+        p.style.pointerEvents = "all";
         p.style.cursor = "pointer";
        p.onclick = () => toggleStatus(name);
         svg.appendChild(p);
