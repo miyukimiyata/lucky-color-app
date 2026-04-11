@@ -326,6 +326,7 @@
   }
 
   async function toggleStatus(name) {
+     console.log("toggle", name);
     let z = state[name];
     if (!z) z = { status: 0, start: "", end: "" };
 
@@ -371,7 +372,7 @@
         p.setAttribute("stroke-width", "0.45");
         p.style.pointerEvents = "auto";
         p.style.cursor = "pointer";
-        p.addEventListener("click", () => toggleStatus(name));
+       p.onclick = () => toggleStatus(name);
         svg.appendChild(p);
       });
     });
@@ -389,7 +390,7 @@
         <span class="z-name">${z.name}</span>
         <span class="z-status">${STATUS[s.status].label}</span>
       `;
-      div.addEventListener("click", () => toggleStatus(z.name));
+    div.onclick = () => toggleStatus(z.name);
       layer.appendChild(div);
     });
 
@@ -408,7 +409,7 @@
           完了 ${s.end || "--:--"}
         </div>
       `;
-      c.addEventListener("click", () => toggleStatus(z.name));
+      c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
   }
