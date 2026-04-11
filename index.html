@@ -311,7 +311,14 @@
       const c = document.createElement("div");
       c.className = "card";
       c.style.background = STATUS[s.status].color;
-      c.innerHTML = `<div class="card-title">${z.name}</div><div class="card-time">開始 ${s.start || "--:--"}<br>完了 ${s.end || "--:--"}</div>`;
+c.innerHTML = `
+  <div class="card-title">${z.name}</div>
+  <div class="card-time">
+    開始 ${s.start || "--:--"}<br>
+    担当完了 ${s.status >= 2 ? (s.end || "--:--") : "--:--"}<br>
+    役員完了 ${s.status === 3 ? (s.end || "--:--") : "--:--"}
+  </div>
+`;
       c.onclick = () => toggleStatus(z.name);
       lv.appendChild(c);
     });
